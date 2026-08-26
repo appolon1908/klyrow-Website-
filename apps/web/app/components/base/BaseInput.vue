@@ -30,7 +30,7 @@ withDefaults(
     required?: boolean
     invalid?: boolean
   }>(),
-  { type: 'text', required: false, invalid: false, hint: undefined, autocomplete: undefined },
+  { type: 'text', required: false, invalid: false },
 )
 defineEmits<{ 'update:modelValue': [value: string] }>()
 </script>
