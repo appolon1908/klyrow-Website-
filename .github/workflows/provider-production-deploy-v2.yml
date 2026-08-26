@@ -1,55 +1,18 @@
-name: Provider-host production deploy
+name: DEPRECATED — provider production deploy v2
 
 on:
   workflow_dispatch:
-    inputs:
-      release_sha:
-        description: Exact reviewed 40-character release SHA
-        required: true
-      image_digest:
-        description: Exact GHCR image reference including @sha256 digest
-        required: true
-      manifest_path:
-        description: Absolute provider-host path to approved release manifest
-        required: true
 
 permissions:
   contents: read
 
 jobs:
-  deploy:
-    environment: production
-    runs-on: [self-hosted, linux, x64, klyrow-provider]
-    timeout-minutes: 30
-    concurrency:
-      group: klyrow-website-production
-      cancel-in-progress: false
+  blocked:
+    runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-        with:
-          ref: ${{ inputs.release_sha }}
-      - name: Verify exact checkout
+      - name: Refuse legacy deployment path
         run: |
-          set -Eeuo pipefail
-          test "$(git rev-parse HEAD)" = "${{ inputs.release_sha }}"
-          test -z "$(git status --porcelain)"
-      - name: Deploy exact release
-        env:
-          KLYROW_OWNER_GO: YES
-          KLYROW_RELEASE_SHA: ${{ inputs.release_sha }}
-          KLYROW_WEBSITE_IMAGE: ${{ inputs.image_digest }}
-          KLYROW_RELEASE_MANIFEST: ${{ inputs.manifest_path }}
-          KLYROW_SECRETS_DIR: /srv/klyrow-website/secrets
-          KLYROW_RELEASE_ROOT: /srv/klyrow-website
-          KLYROW_LEGACY_NGINX_SITE: /etc/nginx/sites-available/klyrow.conf
-          KLYROW_PRODUCTION_PORT: '18110'
-          KLYROW_STAGING_PORT: '18111'
-          KLYROW_EXPECTED_PUBLIC_IP: 37.27.128.39
-        run: sudo --preserve-env=KLYROW_OWNER_GO,KLYROW_RELEASE_SHA,KLYROW_WEBSITE_IMAGE,KLYROW_RELEASE_MANIFEST,KLYROW_SECRETS_DIR,KLYROW_RELEASE_ROOT,KLYROW_LEGACY_NGINX_SITE,KLYROW_PRODUCTION_PORT,KLYROW_STAGING_PORT,KLYROW_EXPECTED_PUBLIC_IP ./ops/scripts/deploy-production.sh
-      - name: Upload non-secret evidence
-        if: always()
-        uses: actions/upload-artifact@v4
-        with:
-          name: provider-production-evidence-${{ inputs.release_sha }}
-          path: /srv/klyrow-website/evidence/production-${{ inputs.release_sha }}
-          if-no-files-found: warn
+          echo 'ERROR=legacy_provider_deploy_v2_workflow_disabled' >&2
+          echo 'Use GitOps plan or promote Klyrow Website from main.' >&2
+          echo 'Production apply remains blocked until runtime paths are verified.' >&2
+          exit 1
