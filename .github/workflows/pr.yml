@@ -1,0 +1,24 @@
+name: PR checks
+on:
+  pull_request:
+  push:
+    branches: [refactor/modular-website-architecture]
+permissions:
+  contents: read
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm typecheck
+      - run: pnpm lint
+      - run: pnpm test
+      - run: pnpm build
+      - run: pnpm unused
+      - run: pnpm scan:dependencies
+      - run: pnpm scan:secrets
