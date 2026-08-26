@@ -10,9 +10,10 @@
       </div>
     </section>
 
+    <PublicForm v-if="page.formId" :form-id="page.formId" />
     <PricingExperience v-if="page.kind === 'pricing'" />
 
-    <section v-else class="section page-points">
+    <section v-if="page.kind !== 'pricing'" class="section page-points">
       <div class="container stack"><span class="eyebrow">{{ page.locale === 'es' ? 'Capacidades' : 'Capabilities' }}</span><h2>{{ page.locale === 'es' ? 'Lo que aporta esta parte de Klyrow' : 'What this part of Klyrow provides' }}</h2><div class="grid"><BaseCard v-for="(point, index) in page.points" :key="point" interactive><span class="badge">0{{ index + 1 }}</span><h3>{{ point }}</h3></BaseCard></div></div>
     </section>
 

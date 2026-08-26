@@ -1,19 +1,17 @@
 <template>
   <label class="field">
     <span class="field__label">{{ label }}</span>
-    <select
+    <textarea
       :id="id"
-      class="field__control"
+      class="field__control field__textarea"
       :name="name"
       :value="modelValue"
+      :rows="rows"
       :required="required"
       :aria-invalid="invalid || undefined"
       :aria-describedby="hint ? `${id}-hint` : undefined"
-      @change="$emit('update:modelValue', ($event.target as HTMLSelectElement).value)"
-    >
-      <option value="" disabled>{{ placeholder }}</option>
-      <option v-for="option in options" :key="option.value" :value="option.value">{{ option.label }}</option>
-    </select>
+      @input="$emit('update:modelValue', ($event.target as HTMLTextAreaElement).value)"
+    />
     <span v-if="hint" :id="`${id}-hint`" class="field__hint">{{ hint }}</span>
   </label>
 </template>
@@ -25,13 +23,16 @@ withDefaults(
     name: string
     label: string
     modelValue: string
-    placeholder?: string
-    options: { label: string; value: string }[]
+    rows?: number
     required?: boolean
     hint?: string
     invalid?: boolean
   }>(),
-  { placeholder: 'Select an option', required: false, invalid: false },
+  { rows: 6, required: false, invalid: false },
 )
 defineEmits<{ 'update:modelValue': [value: string] }>()
 </script>
+
+<style scoped>
+.field__textarea { min-height: 9rem; resize: vertical; }
+</style>
