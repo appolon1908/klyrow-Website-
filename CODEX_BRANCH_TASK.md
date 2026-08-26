@@ -25,6 +25,7 @@ refactor/modular-website-architecture
 feat/site-shell-design-system
 feat/content-localization-pages
 feat/public-api-bff
+feat/forms-conversion-engine
 ```
 
 Read completely:
@@ -38,9 +39,9 @@ Read completely:
 
 ## Objective
 
-Build a complete bilingual legal, privacy, cookie, consent, and public privacy-request center. Use draft legal content and configurable factual fields until counsel-approved text is supplied.
+Build a complete bilingual legal, privacy, cookie, consent, and public privacy-request center on top of the accepted shared form engine and BFF contracts. Use draft legal content and configurable factual fields until counsel-approved text is supplied.
 
-This branch owns legal-document publication, cookie/storage registry, cookie preferences, privacy/DPA/abuse/security public flows, and consent gating foundations. It does not enable GTM/GA4 or production tracking.
+This branch owns legal-document publication, cookie/storage registry, cookie preferences, legal/privacy page wiring, privacy-status presentation, and consent gating foundations. It does not create a second form engine and does not enable GTM/GA4 or production tracking.
 
 ## Required legal pages
 
@@ -114,7 +115,7 @@ Use configuration placeholders for:
 - actual subprocessors;
 - approved commercial/refund terms.
 
-Fail closed or hide affected production sections when required values/approval are absent. Do not invent an entity, physical address, certification, SLA, refund rule, vendor, or legal conclusion.
+Fail closed or hide affected production sections when required values/approval are absent. Do not invent an entity, address, certification, SLA, refund rule, vendor, or legal conclusion.
 
 ## Cookie/storage registry
 
@@ -141,7 +142,7 @@ marketing
 
 CI must fail when runtime code introduces an unregistered storage/third-party technology.
 
-The cookie policy and preference center must derive inventory fields from the registry.
+The cookie policy and preference center derive inventory fields from the registry.
 
 ## Consent experience
 
@@ -159,20 +160,46 @@ Requirements:
 
 - non-essential categories off by default in strict mode;
 - no preselected non-essential category;
-- reject choice is not hidden behind extra screens;
+- reject is not hidden behind additional screens;
 - equal, accessible interaction quality;
 - keyboard complete and screen-reader tested;
 - 320px and 200% zoom support;
 - reduced-motion support;
-- single consent/script gate;
+- one consent/script gate;
 - immediate category activation/deactivation where technically possible;
 - GPC/opt-out preference handling through configuration;
 - footer `Cookie settings` action always available;
 - no marketing/analytics SDK loaded by this branch.
 
+## Shared form integration
+
+Consume the registered forms and schemas from `feat/forms-conversion-engine`:
+
+```text
+dpa-request
+privacy-request
+privacy-opt-out
+security-consultation
+security-report
+abuse-report
+subprocessor-updates
+legal-updates
+```
+
+This branch owns:
+
+- page placement and explanatory legal/privacy notices;
+- document/version references;
+- jurisdiction/applicability messaging;
+- privacy request type/status UI;
+- cookie and legal CTA wiring;
+- safe next actions.
+
+This branch must not copy the form engine or create route-specific one-off validation.
+
 ## Required APIs
 
-Implement or complete the BFF handlers using shared contracts and mocked durable adapters:
+Complete legal/consent behavior on the accepted BFF contracts and mocked durable adapters:
 
 ```text
 GET  /api/v1/public/legal-documents
@@ -193,9 +220,9 @@ POST /api/v1/security/report
 
 All writes require:
 
-- typed server validation;
+- shared typed server validation;
 - request ID;
-- idempotency when externally visible;
+- idempotency where externally visible;
 - CSRF/origin protection;
 - body and rate limits;
 - stable problem responses;
@@ -222,17 +249,17 @@ OTHER
 
 Requirements:
 
-- collect only the minimum intake information;
+- collect only minimum intake information through the shared form schema;
 - account creation is not required by default;
-- verification happens later in the approved privacy workflow;
+- verification occurs later in the approved privacy workflow;
 - public status token is random, scoped, expiring, and rate limited;
 - safe status only; no full personal data;
 - no direct deletion from any external system;
-- accessible success, verification-needed, in-progress, completed, denied, and expired states.
+- accessible received, verification-needed, in-progress, completed, denied, withdrawn, and expired states.
 
-## Form consent
+## Form consent and notices
 
-Provide reusable concise notices for all website forms.
+Use shared form infrastructure while supplying localized legal notices.
 
 Separate:
 
@@ -242,7 +269,7 @@ marketing_consent
 terms_acceptance when required
 ```
 
-No prechecked marketing boxes and no automatic marketing subscription from a service request.
+No prechecked marketing box and no automatic marketing subscription from a service/privacy/security request.
 
 ## SEO/indexing
 
@@ -269,7 +296,7 @@ Test:
 - print view;
 - language attributes;
 - accessible tables/download alternatives;
-- English and Spanish completeness.
+- English/Spanish completeness.
 
 ## Security/privacy
 
@@ -306,8 +333,10 @@ Test:
 - registry/runtime inventory consistency;
 - accessibility/device tests.
 
-### APIs and flows
+### Shared forms and APIs
 
+- every legal/privacy/security CTA resolves to a registered shared form;
+- no duplicate schemas or one-off form engine;
 - validation/minimization;
 - idempotency duplicate/conflict;
 - CSRF/origin/rate/body limits;
@@ -346,8 +375,8 @@ Include:
 2. route count by locale and indexing status;
 3. legal registry inventory;
 4. cookie/storage registry inventory;
-5. APIs implemented and contract evidence;
-6. consent and GPC test results;
+5. shared forms wired and APIs completed;
+6. consent/GPC test results;
 7. browser/accessibility results;
 8. security/privacy tests;
 9. SEO/sitemap/noindex results;
@@ -359,13 +388,14 @@ Include:
 
 ## Prohibited
 
+- no second form engine;
 - no production publication;
 - no false legal approval/compliance claim;
 - no invented entity/address/vendor/SLA/refund term;
-- no analytics or marketing technology before consent;
+- no analytics/marketing technology before permission;
 - no direct Odoo/n8n/database access;
 - no external-system deletion;
-- no Docker/Caddy deployment;
+- no Docker/Caddy/staging/production deployment;
 - no secret or credential.
 
-After pushing implementation and exact evidence to the draft PR, stop before `feat/forms-conversion-engine`.
+After pushing implementation and exact evidence to draft PR #18, stop before `feat/middleware-odoo-n8n`.
