@@ -1,8 +1,8 @@
 # Codex Production Mission — Klyrow Public Website
 
-## 1. Mission
+## Mission
 
-Build, test, deploy and verify the production public website for Klyrow at:
+Build, test and deploy the public Klyrow website:
 
 ```text
 https://klyrow.com
@@ -15,11 +15,11 @@ Repository:
 https://github.com/appolon1908-hue/klyrow-Website-
 ```
 
-The repository was initialized as an empty project. Codex must create the website from the specifications in this branch rather than assuming application code already exists.
+The repository began empty. Do not assume the application exists. Build it from the contracts in this planning branch.
 
-This authorization applies only to the public Klyrow website. It does **not** authorize live email sending, Postal changes, Odoo accounting changes, production billing, n8n workflow activation outside the website lead-routing scope, or changes to unrelated production applications.
+The owner authorizes production activation of the **public website only** after all gates pass. This does not authorize live email-delivery changes, Postal changes, real billing, Odoo accounting changes, unrestricted n8n activation or changes to unrelated production applications.
 
-## 2. Required reading
+## Mandatory reading
 
 Read completely before editing:
 
@@ -29,193 +29,121 @@ Read completely before editing:
 4. `docs/FORMS_MIDDLEWARE_ODOO_N8N.md`
 5. `docs/SEO_PERFORMANCE_AND_TRACKING.md`
 6. `docs/CADDY_PRODUCTION_DEPLOYMENT.md`
+7. the active branch's `CODEX_BRANCH_TASK.md`
 
-Mark each requirement as `IMPLEMENTED`, `PARTIAL`, `MISSING`, `BLOCKED` or `NOT_APPLICABLE` before implementation and again at completion.
+Before editing, inventory every requirement as:
 
-## 3. Mandatory technology baseline
+```text
+IMPLEMENTED
+PARTIAL
+MISSING
+BLOCKED
+NOT_APPLICABLE
+```
+
+## Technology baseline
 
 Use:
 
-- Nuxt 4 with Vue 3 and TypeScript;
-- Node.js 22 LTS or later supported active LTS;
-- pnpm through Corepack with a committed lock file;
-- Nuxt/Nitro SSR with route-level prerendering for indexable marketing pages;
-- reusable Vue components and data-driven content;
-- server API routes as the same-origin website BFF;
-- Caddy as the public TLS reverse proxy;
-- the Codestra middleware as the sole boundary to Odoo and n8n;
-- Vitest/Nuxt test utilities for unit/component tests;
-- Playwright for critical browser flows;
-- axe-based automated accessibility checks;
-- Lighthouse CI for mobile and desktop performance budgets.
+- Nuxt 4, Vue 3 and TypeScript;
+- Node.js 22 active LTS or a later supported active LTS;
+- pnpm through Corepack with committed `pnpm-lock.yaml`;
+- Nitro SSR and route-level prerendering;
+- same-origin Nuxt server APIs;
+- Vitest/Nuxt test utilities;
+- Playwright;
+- axe accessibility checks;
+- Lighthouse CI;
+- Caddy as the production TLS reverse proxy;
+- Codestra middleware as the only boundary to Odoo and n8n.
 
-Do not use Nuxt 3. Do not build a client-only SPA for indexable pages.
+Do not use Nuxt 3. Do not build a client-only SPA for indexable content.
 
-## 4. Product and visual direction
-
-Create an original Klyrow visual system inspired by the spacious editorial confidence of premium technology websites without copying Apple assets, text, page structure, trademarks or interaction details.
-
-The product should feel:
-
-- bold, colorful and optimistic;
-- clean and highly readable;
-- spacious, with large editorial typography;
-- modern but not visually noisy;
-- trustworthy enough for enterprise email infrastructure;
-- playful in illustrations, gradients and microinteractions;
-- fast and usable on low-end mobile devices;
-- consistent across mobile, tablet, laptop and wide desktop.
-
-Required characteristics:
-
-- custom Klyrow wordmark treatment using text/SVG owned by the project;
-- strong blue/violet core with controlled coral, cyan, lime and amber accents;
-- neutral light surfaces with selective dark storytelling sections;
-- generous whitespace and clear hierarchy;
-- real product diagrams built from HTML/CSS/SVG rather than heavy video;
-- subtle scroll and hover motion disabled or reduced under `prefers-reduced-motion`;
-- one clear primary call to action per major section;
-- no auto-playing audio;
-- no blocking entrance animation;
-- no misleading metrics, testimonials, customer logos or guarantees.
-
-## 5. Website scope
-
-Implement all routes in `docs/SITEMAP_CONTENT_AND_DESIGN.md`.
-
-Launch target:
-
-- 46 unique English indexable content pages;
-- 46 complete Spanish equivalents under `/es`;
-- 92 localized indexable URLs total;
-- four legal/policy pages per locale;
-- noindex utility routes for form confirmation and error handling;
-- sitemap indexes that include only canonical indexable URLs;
-- all pages reachable with ordinary crawlable links.
-
-The five primary audience landing pages are:
-
-1. developers;
-2. marketing teams;
-3. agencies and resellers;
-4. enterprise teams;
-5. Odoo and automation teams.
-
-Each feature must have a dedicated linked page. The pricing page must be configuration driven and must not invent prices. Default production behavior is `Contact sales` until the owner supplies approved price values.
-
-## 6. Navigation and conversion system
-
-Desktop header:
-
-- Product mega menu;
-- Solutions mega menu;
-- Integrations;
-- Developers;
-- Pricing;
-- Resources;
-- Sign in;
-- primary `Start building` or `Request a demo` action.
-
-Mobile header:
-
-- accessible disclosure navigation;
-- same route availability as desktop;
-- focus trap only while the drawer is open;
-- escape-to-close;
-- background scroll lock;
-- visible current route;
-- no hidden mobile-only navigation gaps.
-
-Global conversion components:
-
-- sticky but non-obstructive header;
-- hero CTA pair;
-- mid-page contextual CTA;
-- final CTA band;
-- accessible exit-intent/engagement popup shown only after user engagement, never immediately;
-- popup frequency cap stored without sensitive data;
-- popup disabled for reduced-motion or when consent rules require it;
-- no popups on legal pages, form success pages or small screens where it obscures content.
-
-## 7. Forms
-
-Implement reusable validated forms for:
-
-- request a demo;
-- contact sales;
-- pricing consultation;
-- developer/signup interest;
-- reseller/partner application;
-- support/general contact;
-- newsletter subscription.
-
-Every form must:
-
-- submit to a same-origin `/api/v1/...` Nuxt server route;
-- use an idempotency key;
-- validate server-side with a typed schema;
-- normalize email and phone fields;
-- capture explicit consent evidence;
-- include hidden honeypot and minimum-completion-time controls;
-- enforce per-IP and per-email rate limits;
-- support an optional CAPTCHA provider through environment configuration;
-- capture landing page, referrer, locale and approved UTM fields;
-- never expose middleware, Odoo or n8n credentials;
-- return a stable submission ID;
-- show accessible pending, success, validation, duplicate and retryable failure states;
-- never show false success when durable middleware acceptance failed.
-
-Detailed contracts are in `docs/FORMS_MIDDLEWARE_ODOO_N8N.md`.
-
-## 8. Middleware, Odoo and n8n boundary
-
-Browser -> Nuxt BFF -> Codestra middleware -> durable outbox -> Odoo/n8n.
-
-Never:
-
-- call Odoo directly from the browser;
-- call n8n directly from the browser;
-- put Odoo or n8n credentials in this repository;
-- write directly to Odoo PostgreSQL;
-- make n8n authoritative for lead or consent state;
-- let an Odoo or n8n outage silently lose a lead.
-
-The middleware must acknowledge only after durable persistence. Odoo receives approved customer/contact and CRM lead information. n8n may perform non-authoritative notifications, routing, enrichment and reminders. All external effects use idempotency and correlation IDs.
-
-## 9. SEO and Google requirements
+## Product scope
 
 Implement:
 
-- SSR/prerendered meaningful HTML;
-- unique title, description, canonical, Open Graph and social metadata per route;
-- English/Spanish hreflang pairs plus `x-default`;
-- crawlable internal links;
-- XML sitemap index and locale sitemaps;
+- 46 unique English indexable content pages;
+- 46 complete Spanish equivalents under `/es`;
+- 92 localized indexable URLs;
+- four legal/policy pages per locale;
+- noindex form-confirmation and error routes;
+- five distinct audience landing experiences:
+  - developers;
+  - marketing teams;
+  - agencies/resellers;
+  - enterprise;
+  - Odoo and automation teams;
+- one dedicated page for every feature in the route inventory;
+- pricing page with configuration-driven plans;
+- `Contact sales` pricing mode until owner-approved numbers are supplied;
+- demo, contact, pricing, developer-interest, partner, support and newsletter forms;
+- English and Spanish navigation/content/forms;
+- responsive layouts for mobile, tablet, laptop and desktop.
+
+Use an original, colorful, spacious Klyrow design inspired by premium editorial technology sites without copying Apple code, assets, wording, trademarks or distinctive page compositions.
+
+Do not ship fake customer logos, testimonials, prices, reviews, ratings, certifications, awards or performance statistics.
+
+## Form and back-office boundary
+
+Required flow:
+
+```text
+Browser
+  -> Nuxt same-origin /api/v1 endpoint
+  -> authenticated Codestra middleware
+  -> durable middleware inbox/outbox
+  -> Odoo 19 CRM/contact/activity adapter
+  -> optional non-authoritative n8n automation
+```
+
+Every form requires:
+
+- server-side typed validation;
+- idempotency key;
+- request/submission/event IDs;
+- origin/CSRF protection;
+- rate limits;
+- honeypot and minimum-completion-time checks;
+- optional CAPTCHA adapter;
+- explicit service-contact and marketing-consent separation;
+- source, locale, referrer and approved UTM capture;
+- accessible pending/success/failure states;
+- honest retryable failure when middleware durable acceptance did not occur.
+
+Never expose or commit Odoo, n8n, middleware, Postal or Keycloak credentials. Never call Odoo or n8n directly from the browser. Never write directly to Odoo PostgreSQL. n8n is not authoritative.
+
+## SEO and Google acceptance
+
+Implement:
+
+- meaningful SSR/prerendered HTML;
+- unique titles, descriptions and social metadata;
+- canonical URLs;
+- reciprocal English/Spanish hreflang plus `x-default`;
+- sitemap index and locale sitemaps;
 - robots.txt;
-- clean status codes and a real 404;
-- Organization and WebSite JSON-LD on the home/about surface;
+- real 404 behavior;
+- crawlable ordinary links;
+- Organization and WebSite JSON-LD where accurate;
 - BreadcrumbList JSON-LD on hierarchical pages;
-- SoftwareApplication JSON-LD only where visible content supports every property;
-- FAQ structured data only when visible FAQ content exists and only where current Google guidelines permit;
-- no fabricated reviews, ratings, prices, awards, customers or statistics;
-- no keyword stuffing, hidden text, doorway pages or duplicated thin pages;
-- image alt text based on purpose, not keywords;
+- SoftwareApplication/FAQ markup only when visible content and current Google rules support it;
 - Search Console verification through environment configuration;
-- post-deploy sitemap submission instructions and verification evidence.
+- broken-link, metadata, sitemap and structured-data tests;
+- no keyword stuffing, hidden text, doorway pages or thin duplicated pages.
 
-Use a page-level SEO content object rather than scattered hard-coded tags.
+A site can meet Google's technical requirements without Google guaranteeing indexing, ranking or rich results. Report measured facts only.
 
-## 10. Analytics and tracking
+## Tracking
 
-Create a consent-aware analytics abstraction that can load Google Tag Manager/GA4 only when configured and legally permitted.
+Create a consent-aware analytics abstraction. GTM/GA4 must be optional and environment configured.
 
-Required event names:
+Track approved non-sensitive events such as:
 
 ```text
 page_view
 cta_click
-navigation_open
-pricing_plan_view
 pricing_cta_click
 form_start
 form_validation_error
@@ -224,25 +152,15 @@ form_submit_success
 form_submit_failure
 language_change
 resource_download
-outbound_link
-video_play
 popup_view
 popup_submit
 ```
 
-Requirements:
+Never send passwords, complete emails, complete phones, message bodies, API keys or credentials to analytics. Optional analytics must not load before consent when policy requires consent.
 
-- no tracking identifiers hard-coded in source;
-- environment-configured GTM/GA4/Search Console values;
-- consent state propagated before optional marketing analytics loads;
-- no passwords, message text, full phone numbers or sensitive form values in analytics;
-- UTM attribution normalized and sent with the lead event through middleware;
-- first-party request IDs and submission IDs available for operational tracing;
-- development and test traffic clearly excluded or labeled.
+## Performance and accessibility
 
-## 11. Performance budgets
-
-Target Google Core Web Vitals good thresholds at the 75th percentile:
+Target Core Web Vitals good thresholds:
 
 ```text
 LCP <= 2.5 seconds
@@ -250,97 +168,48 @@ INP <= 200 milliseconds
 CLS <= 0.1
 ```
 
-Lighthouse CI minimums on the tested mobile profile:
+Lighthouse CI mobile minimums on home, pricing, one solution and one feature page:
 
 ```text
-Performance >= 95 on home, pricing and one representative feature page
+Performance >= 95
 Accessibility = 100
 Best Practices >= 95
 SEO = 100
 ```
 
-Additional budgets:
+Budgets:
 
 ```text
-Initial compressed JavaScript <= 180 KB for the home route unless evidence justifies an exception
+Initial compressed JavaScript <= 180 KB
 Initial compressed CSS <= 70 KB
+Critical font transfer <= 100 KB
 No single above-fold raster image > 180 KB
-No unoptimized animated GIF
-No render-blocking third-party analytics before consent
-No more than two font families
-No more than four font files on initial route
+No third-party analytics JavaScript before consent
 ```
 
-Use responsive AVIF/WebP images with dimensions, lazy loading below the fold, preloaded critical local font subset only, code splitting, no heavy carousel library and no unbounded animation library.
+Meet WCAG 2.2 AA: skip link, keyboard-complete navigation, logical headings, labels/descriptions, visible focus, contrast, reduced motion, dialog focus management, live form status, 200% zoom and mobile touch targets.
 
-A perfect PageSpeed score cannot be guaranteed for every network and device. Codex must provide the exact measured results, identify remaining bottlenecks and must not claim a score it did not measure.
+Do not claim a PageSpeed/Lighthouse score that was not measured. Record failures and reviewed exceptions honestly.
 
-## 12. Accessibility
-
-Meet WCAG 2.2 AA and test:
-
-- keyboard-complete navigation;
-- skip link;
-- headings in logical order;
-- labels and descriptions for all controls;
-- accessible menu and disclosure semantics;
-- visible focus;
-- color contrast;
-- reduced motion;
-- no content available only on hover;
-- live regions for form status;
-- focus movement after validation and route changes;
-- dialog focus trap, escape close and focus restoration;
-- touch target sizes;
-- zoom to 200% without loss of content or function.
-
-## 13. Security
+## Security
 
 Implement:
 
-- strict input validation;
-- output encoding;
-- origin checks and CSRF protection for state-changing browser APIs;
-- rate limiting;
-- request body limits;
+- strict validation and output encoding;
+- CSRF/origin controls;
+- rate/body limits;
 - safe redirect allowlist;
-- security headers through Nuxt and Caddy;
-- no open proxy behavior;
-- no arbitrary URL fetching;
-- no secrets in public runtime configuration;
-- dependency and container scanning;
-- gitleaks or equivalent secret scanning;
-- non-root production process;
-- read-only container filesystem where practical;
-- structured logs without lead message bodies or credentials;
-- privacy-safe request correlation.
+- CSP/security headers;
+- no arbitrary URL fetching or open proxy;
+- secrets only in approved files/managers;
+- dependency, container and secret scans;
+- non-root production runtime;
+- privacy-safe logs;
+- no sensitive form bodies in logs.
 
-## 14. CI/CD
+## Clean branch order
 
-Add GitHub Actions for:
-
-1. lock-file installation;
-2. type checking;
-3. linting;
-4. unit and component tests;
-5. Nuxt build;
-6. prerender route validation;
-7. broken-link and metadata checks;
-8. Playwright browser tests;
-9. axe accessibility tests;
-10. Lighthouse CI;
-11. secret scan;
-12. dependency audit;
-13. container build;
-14. container scan;
-15. SBOM artifact;
-16. immutable image/artifact publication only from an explicitly dispatched release workflow.
-
-No pull-request workflow may deploy directly to production.
-
-## 15. Branch execution order
-
-Use the branches defined in `docs/BRANCH_AND_DELIVERY_PLAN.md` in this order:
+Follow exactly:
 
 ```text
 planning/production-website-blueprint
@@ -348,36 +217,36 @@ feat/nuxt4-marketing-site
 feat/website-odoo-n8n-forms
 feat/website-seo-performance
 ops/caddy-production
-release/website-production
+release/website-production-readiness
 ```
 
-One independently reviewable PR per implementation branch. Do not combine unrelated work into one huge unreviewable commit.
+Before implementing each branch, recreate/update it from its latest reviewed prerequisites. One independently reviewable PR per implementation branch. Push the branch, post exact evidence and stop before the next branch unless explicitly instructed to continue from an accepted baseline.
 
-## 16. Production deployment authorization and limits
+## CI/CD
 
-The owner has authorized production deployment of the **public website** after all required gates pass.
+Required checks:
 
-Production activation is allowed only from `release/website-production` after:
+1. frozen lock-file install;
+2. type check;
+3. lint;
+4. unit/component tests;
+5. Nuxt build and prerender validation;
+6. route and broken-link tests;
+7. metadata/sitemap/structured-data tests;
+8. Playwright browser tests;
+9. axe accessibility tests;
+10. Lighthouse CI;
+11. secret scan;
+12. dependency audit;
+13. container build/scan;
+14. SBOM;
+15. immutable artifact publication only from an explicitly dispatched release workflow.
 
-- all selected PRs are merged into the release candidate;
-- CI is green;
-- staging is verified;
-- forms create durable middleware records and test-mode Odoo/n8n results;
-- DNS for `klyrow.com` and `www.klyrow.com` points to the intended Caddy host;
-- ports 80/443 are reachable;
-- existing Caddy configuration is backed up and audited;
-- the new Caddy fragment validates;
-- TLS issuance succeeds;
-- health/readiness checks pass;
-- rollback is tested;
-- no unrelated Caddy sites or services are changed;
-- exact before/after evidence is captured.
+No pull-request workflow may deploy directly to production.
 
-This authorization does not allow Codex to invent missing DNS records, credentials, Odoo models, n8n workflow IDs or production secrets. If any required external value is absent, stop with a precise blocker instead of bypassing it.
+## Production host and runtime
 
-## 17. Deployment target
-
-Preferred host:
+Preferred host to audit:
 
 ```text
 Codestra middleware/Caddy server
@@ -385,48 +254,72 @@ public IP: 65.109.65.169
 private IP: 10.40.0.1
 ```
 
-Use an isolated source checkout and release directory. Do not develop in a live web root. Audit the real host before assuming paths or service names.
-
 Preferred runtime:
 
 ```text
 Caddy :80/:443
-  -> reverse_proxy 127.0.0.1:3100
+  -> 127.0.0.1:3100
   -> Nuxt/Nitro Node process
   -> same-origin server APIs
-  -> authenticated Codestra middleware endpoint
+  -> authenticated middleware
 ```
 
-Use the deployment and rollback rules in `docs/CADDY_PRODUCTION_DEPLOYMENT.md`.
+Use an isolated source checkout. Do not develop in `/srv/klyrow-website`, `/var/www`, `/opt/klyrow` or an existing production checkout.
 
-## 18. Required final report
+## Production gates
+
+Only `release/website-production-readiness` may activate the public site, after:
+
+```text
+REVIEWED_FEATURE_PRS=PASS
+CI=PASS
+STAGING=PASS
+ROUTE_AND_LOCALE_COUNTS=PASS
+MOBILE_AND_DESKTOP=PASS
+ACCESSIBILITY=PASS
+SEO_VALIDATION=PASS
+LIGHTHOUSE=PASS_OR_REVIEWED_EXCEPTION
+FORM_API=PASS
+MIDDLEWARE_DURABILITY=PASS
+ODOO_TEST_OR_APPROVED_ROUTE=PASS
+N8N_TEST_OR_APPROVED_ROUTE=PASS
+DNS=PASS
+CADDY_BACKUP=PASS
+CADDY_VALIDATE=PASS
+TLS=PASS
+HEALTH_AND_READINESS=PASS
+ROLLBACK_REHEARSAL=PASS
+UNRELATED_SERVICES_UNCHANGED=PASS
+```
+
+DNS for `klyrow.com` and `www.klyrow.com` must resolve to the intended Caddy host and ports 80/443 must be reachable. Back up and validate the complete existing Caddy configuration. Add/update only the Klyrow website fragment. Do not restart the complete middleware stack.
+
+If DNS, host access, middleware credentials, Odoo mappings, n8n identifiers, Search Console authorization or production secrets are missing, report the precise blocker. Do not invent or bypass it.
+
+## Required final report
 
 Provide:
 
-1. hostname and IPs;
-2. working directory;
-3. repository remote;
-4. branch and starting SHA for each branch;
-5. final release SHA;
-6. every commit and changed file;
-7. implemented route count in English and Spanish;
-8. route manifest and sitemap counts;
-9. screenshots or browser evidence for mobile, tablet and desktop;
-10. exact type-check, lint, test and build commands/results;
-11. exact Playwright and accessibility results;
-12. exact Lighthouse results per tested route/profile;
-13. exact broken-link, metadata, sitemap and structured-data results;
-14. form contract and durable middleware test evidence;
-15. Odoo test-mode lead/contact mapping evidence;
-16. n8n test-mode workflow evidence;
-17. container, dependency and secret-scan results;
-18. staging URL and smoke results;
-19. production domain, TLS issuer/expiry and HTTP status evidence;
-20. Caddy validation and reload result;
-21. health/readiness results;
-22. analytics/consent verification;
-23. rollback command and rehearsal result;
-24. known limitations and follow-up work;
-25. confirmation that no live email delivery, production billing or unrelated service was changed.
+1. hostname/IPs and isolated working directory;
+2. repository remote;
+3. branch starting/final SHAs and commits;
+4. final release SHA/artifact/checksums;
+5. changed files;
+6. exact English/Spanish route and sitemap counts;
+7. responsive screenshots/evidence;
+8. type-check/lint/unit/build results;
+9. Playwright/accessibility results;
+10. Lighthouse results per route/profile;
+11. link/SEO/sitemap/structured-data results;
+12. form and middleware durability evidence;
+13. Odoo/n8n approved test evidence;
+14. security/dependency/container/secret-scan results;
+15. staging evidence;
+16. DNS/TLS/Caddy validation/reload evidence;
+17. production status checks;
+18. analytics/consent verification;
+19. rollback command and rehearsal;
+20. limitations/blockers;
+21. confirmation that no live email delivery, Postal, real billing or unrelated service was changed.
 
-Do not mark the mission complete merely because the build command passes.
+Do not mark complete merely because the site builds.
