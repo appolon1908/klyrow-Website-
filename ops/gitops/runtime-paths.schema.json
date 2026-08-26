@@ -1,0 +1,64 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://klyrow.com/schemas/gitops/runtime-paths-v1.json",
+  "title": "Klyrow Website Runtime Paths",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "environment", "status", "host", "runtime", "evidence"],
+  "properties": {
+    "schema_version": { "const": 1 },
+    "environment": { "enum": ["staging", "production"] },
+    "status": { "enum": ["unverified", "verified", "retired"] },
+    "verified_at": { "type": ["string", "null"], "format": "date-time" },
+    "verified_by": { "type": ["string", "null"], "minLength": 1 },
+    "host": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["expected_public_ip", "expected_private_ip", "hostname", "machine_id_sha256"],
+      "properties": {
+        "expected_public_ip": { "const": "37.27.128.39" },
+        "expected_private_ip": { "const": "10.40.0.4" },
+        "hostname": { "type": ["string", "null"], "minLength": 1 },
+        "machine_id_sha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" }
+      }
+    },
+    "runtime": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "release_root",
+        "secrets_root",
+        "compose_file",
+        "nginx_root",
+        "legacy_nginx_site",
+        "nginx_binary",
+        "docker_binary",
+        "operator_path",
+        "production_port",
+        "staging_port"
+      ],
+      "properties": {
+        "release_root": { "type": ["string", "null"] },
+        "secrets_root": { "type": ["string", "null"] },
+        "compose_file": { "type": ["string", "null"] },
+        "nginx_root": { "type": ["string", "null"] },
+        "legacy_nginx_site": { "type": ["string", "null"] },
+        "nginx_binary": { "type": ["string", "null"] },
+        "docker_binary": { "type": ["string", "null"] },
+        "operator_path": { "type": ["string", "null"] },
+        "production_port": { "type": "integer", "minimum": 1025, "maximum": 65535 },
+        "staging_port": { "type": "integer", "minimum": 1025, "maximum": 65535 }
+      }
+    },
+    "evidence": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["discovery_artifact_sha256", "reviewed_pr", "notes"],
+      "properties": {
+        "discovery_artifact_sha256": { "type": ["string", "null"], "pattern": "^[a-f0-9]{64}$" },
+        "reviewed_pr": { "type": ["integer", "null"], "minimum": 1 },
+        "notes": { "type": "string", "maxLength": 2000 }
+      }
+    }
+  }
+}
