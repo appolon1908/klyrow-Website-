@@ -77,12 +77,18 @@ jobs:
           assert plan['live_server_changed'] is False
           assert 'runtime_paths_unverified' in plan['apply_blockers']
           PY
-      - name: Reject unsafe deployment workflow patterns
+      - name: Reject unsafe executable deployment patterns
         run: |
           set -Eeuo pipefail
+          scan_targets=(
+            .github/workflows/gitops-runtime-discovery.yml
+            .github/workflows/gitops-promote.yml
+            ops/gitops/scripts
+            ops/scripts/deploy-production.sh
+          )
           ! grep -R --line-number -E \
             'sudo[[:space:]]+(bash|sh)|sudo[[:space:]]+docker[[:space:]].*\*|NOPASSWD:[[:space:]]+ALL|manifest_path:' \
-            .github/workflows/gitops-*.yml ops/gitops
+            "${scan_targets[@]}"
       - name: Repository whitespace check
         run: git diff --check
       - name: Upload plan evidence

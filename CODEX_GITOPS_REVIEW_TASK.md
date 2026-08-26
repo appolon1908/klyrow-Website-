@@ -3,7 +3,7 @@
 ## Repository and branch
 
 ```text
-repository: appolon1908-hue/klyrow-Website-
+repository: appolon1908-hue/klyrow-Website
 branch:     ops/gitops-secure-delivery
 base:       release/website-production-v1
 ```

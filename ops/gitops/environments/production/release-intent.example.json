@@ -2,7 +2,7 @@
   "schema_version": 1,
   "environment": "production",
   "status": "draft",
-  "source_repository": "appolon1908-hue/klyrow-Website-",
+  "source_repository": "appolon1908-hue/klyrow-Website",
   "intent_commit": "0000000000000000000000000000000000000000",
   "release_sha": "0000000000000000000000000000000000000000",
   "image": "ghcr.io/appolon1908-hue/klyrow-website@sha256:0000000000000000000000000000000000000000000000000000000000000000",
