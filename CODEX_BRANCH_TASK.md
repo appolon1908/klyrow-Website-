@@ -6,65 +6,123 @@
 feat/seo-structured-data
 ```
 
+## Status
+
+```text
+FEATURE_STATUS=SCAFFOLDED
+APPLICATION_CODE_PRESENT=NO
+SEO_VALIDATION=NOT_RUN
+STAGING_CHANGED=NO
+PRODUCTION_CHANGED=NO
+```
+
 ## Prerequisites
 
-Update from accepted localized-content and conversion branches before implementation.
+Before implementation, recreate/update this branch from accepted:
+
+```text
+feat/content-localization-pages
+feat/feature-pricing-conversion
+feat/legal-privacy-cookie-center
+```
 
 ## Objective
 
-Make every indexable Klyrow route technically sound, discoverable and internally connected without inventing rankings, reviews, prices or claims.
+Make every approved indexable Klyrow marketing and legal route technically sound, discoverable and internally connected without inventing rankings, reviews, prices, compliance status or claims.
 
 ## Required implementation
 
-- Central typed page SEO object.
-- Unique localized title and meta description per indexable route.
-- Canonical URLs.
-- Reciprocal English/Spanish hreflang and `x-default`.
-- Open Graph/social metadata.
-- Sitemap index and locale sitemaps.
-- robots.txt.
-- Real 404 status and page.
-- Correct noindex behavior for form success/error and other utility routes.
-- Organization and WebSite JSON-LD where accurate.
-- BreadcrumbList on hierarchical routes.
-- SoftwareApplication or FAQ schema only when visible content supports every property and policy permits it.
-- Crawlable internal links and related-content system.
-- Search Console verification through environment configuration.
-- Metadata, canonical, hreflang, sitemap, structured-data and broken-link validators.
-- Status-code and redirect tests.
-- Image alt text based on purpose rather than keyword stuffing.
+- central typed page SEO object;
+- unique localized title and meta description per approved indexable route;
+- canonical URLs;
+- reciprocal English/Spanish hreflang and `x-default`;
+- Open Graph/social metadata;
+- sitemap index and locale sitemaps generated from the marketing route manifest and approved legal registry;
+- robots.txt;
+- real 404 status/page;
+- correct noindex for form success/error, cookie settings, privacy request/status, legal version history, draft/review/retired legal documents and other utilities;
+- conditional legal routes excluded when disabled;
+- Organization and WebSite JSON-LD only where accurate;
+- BreadcrumbList on hierarchical routes;
+- SoftwareApplication/FAQ schema only when visible content supports every property and policy permits it;
+- crawlable internal links and related-content system;
+- Search Console verification through environment configuration;
+- metadata, canonical, hreflang, sitemap, structured-data, redirect and broken-link validators;
+- image alt text based on purpose rather than keyword stuffing.
+
+## Route-count rules
+
+Marketing routes:
+
+```text
+46 English
+46 Spanish
+```
+
+Legal routes:
+
+- count derives from `LegalDocumentDefinition` entries with `status=approved` and `indexable=true`;
+- the planned public legal set has up to 12 routes per locale;
+- draft/review/retired/disabled/utility routes do not count as indexable;
+- English/Spanish approval parity is required for paired published routes unless explicitly approved otherwise.
+
+Do not hard-code a misleading total when legal approvals are still pending. Report:
+
+```text
+MARKETING_INDEXABLE_EN=
+MARKETING_INDEXABLE_ES=
+LEGAL_INDEXABLE_EN=
+LEGAL_INDEXABLE_ES=
+TOTAL_INDEXABLE=
+NOINDEX_UTILITY_COUNT=
+DISABLED_CONDITIONAL_COUNT=
+```
+
+## Legal indexing rules
+
+- only approved effective legal documents may be indexable;
+- draft/review pages display noindex in review environments;
+- retired/historical versions are noindex unless counsel explicitly approves indexing;
+- `/cookie-settings`, `/privacy-request`, `/privacy-request/status/*`, `/do-not-sell-or-share` intake, and `/legal/version-history` are normally noindex;
+- legal pages must not use FAQ schema solely for search enhancement;
+- legal effective/updated dates must match the registry;
+- sitemap generation fails closed on missing canonical, locale pair, version or publication state.
 
 ## Content restrictions
 
-- No fake reviews, ratings, prices, customers, awards or statistics.
-- No hidden text, doorway pages, duplicated thin content or keyword stuffing.
-- No guaranteed ranking, indexing, rich results or inbox placement claims.
-- Do not index utility/success/error routes.
+- no fake reviews, ratings, prices, customers, awards, certifications or statistics;
+- no hidden text, doorway pages, duplicated thin content or keyword stuffing;
+- no guaranteed ranking, indexing, rich-result or inbox-placement claims;
+- no draft legal text presented as effective/indexable;
+- no indexable success/error/privacy-token routes.
 
 ## Required tests
 
-- Exact indexable URL counts by locale.
-- Every canonical is self-consistent and absolute.
-- Every localized pair has reciprocal hreflang.
-- `x-default` behavior.
-- No duplicate title/description/H1 across materially different routes unless explicitly reviewed.
-- Sitemap URL count and status.
-- robots rules.
-- 404 status.
-- Noindex utility routes.
-- JSON-LD parses and matches visible content.
-- All internal links resolve.
-- No orphan indexable page.
-- Redirect loop detection.
-- Production build/prerender validation.
+- exact 46 marketing route count per locale;
+- legal count equals approved/indexable registry entries;
+- every canonical is self-consistent and absolute;
+- every localized published pair has reciprocal hreflang;
+- `x-default` behavior;
+- no duplicate title/description/H1 across materially different routes unless reviewed;
+- sitemap count/status and locale partition;
+- draft/retired/utility exclusion;
+- conditional route exclusion;
+- robots rules;
+- real 404 status;
+- JSON-LD parses and matches visible content;
+- all internal links resolve;
+- no orphan approved indexable page;
+- redirect loop detection;
+- production build/prerender validation.
 
 ## Git delivery
 
-Push only this branch, open/update one draft PR and post exact route/sitemap/link/metadata evidence. Stop before analytics/performance/deployment.
+Push only this branch, update draft PR #11 and post exact route/sitemap/link/metadata/legal-indexing evidence. Stop before analytics/performance/deployment.
 
 ## Prohibited
 
-- No analytics loader.
-- No invented SEO proof.
-- No form/API/middleware scope expansion.
-- No Docker/Caddy/production deployment.
+- no analytics loader;
+- no invented SEO/legal proof;
+- no form/API/middleware scope expansion;
+- no Docker/Caddy/staging/production deployment;
+- no claim that Google indexing/ranking is guaranteed or live.
