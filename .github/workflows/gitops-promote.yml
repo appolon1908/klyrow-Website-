@@ -72,7 +72,7 @@ jobs:
       - name: Generate plan artifact
         run: |
           set -Eeuo pipefail
-          ops/gitops/scripts/plan-deployment.sh \
+          bash ops/gitops/scripts/plan-deployment.sh \
             "$RUNTIME_PATHS" "$DEPLOYMENT_POLICY" "$RELEASE_INTENT" \
             artifacts/gitops-plan.json
           sha256sum \
@@ -122,7 +122,7 @@ jobs:
           KLYROW_GITOPS_MODE: apply
         run: |
           set -Eeuo pipefail
-          ops/gitops/scripts/apply-deployment.sh \
+          bash ops/gitops/scripts/apply-deployment.sh \
             "$RUNTIME_PATHS" "$DEPLOYMENT_POLICY" "$RELEASE_INTENT"
       - name: Upload non-secret release evidence
         if: always()
