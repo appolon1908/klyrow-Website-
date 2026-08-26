@@ -1,11 +1,12 @@
 # Klyrow Website
 
-Public marketing website repository for Klyrow.
+Public marketing website repository for Klyrow, the governed customer-communications platform.
 
 ## Current status
 
 ```text
 PLANNING_AND_BRANCH_SCAFFOLDS=AVAILABLE
+MODULAR_ARCHITECTURE_SCAFFOLD=VERIFIED_IN_CI
 APPLICATION_IMPLEMENTATION=NOT_COMPLETE
 MAIN_RELEASE_BASELINE=NOT_READY
 STAGING_DEPLOYMENT=NOT_ACTIVE
@@ -13,8 +14,29 @@ PRODUCTION_DEPLOYMENT=NOT_ACTIVE
 PUBLIC_WEBSITE_LIVE=NO
 ```
 
-The Nuxt/Vue application, APIs, forms, middleware integration, legal pages, Docker runtime, Caddy edge configuration, staging evidence, and production release must be implemented and reviewed through the branches tracked in Issue #3.
+This branch provides the minimal Nuxt 4/Vue 3 workspace, shared contracts, module boundaries, test foundations, and CI needed for later feature branches. It does not provide the complete website, live forms, middleware/Odoo/n8n integrations, Docker/Caddy deployment, or production activation.
 
-Do not deploy `main` in its current state. The default branch currently serves only as the repository baseline and contains no production website application.
+Do not deploy this feature branch or `main` as a production website. Production activation is permitted only from the final reviewed release branch after CI, staging, DNS, TLS, Caddy, middleware, Odoo/n8n test routing, accessibility, performance, security, and rollback gates pass.
 
-Authoritative planning and implementation contracts are maintained on `planning/production-website-blueprint`. Production activation is permitted only from the final reviewed release branch after CI, staging, DNS, TLS, Caddy, middleware, Odoo/n8n test routing, accessibility, performance, security, and rollback gates pass.
+## Authoritative documents
+
+- `CODEX_WEBSITE_PRODUCTION_TASK.md`
+- `CODEX_WEBSITE_HARDENING_AND_DOCKER_TASK.md`
+- `docs/IMPLEMENTATION_STATUS_AND_RELEASE_TRUTH.md`
+- `docs/REPOSITORY_ARCHITECTURE_AND_API_CATALOG.md`
+- `docs/BRANCH_AND_DELIVERY_PLAN.md`
+- `docs/API_FORM_CTA_CONTRACT.md`
+- `docs/LEGAL_PRIVACY_COOKIE_COMPLIANCE.md`
+- `docs/DOCKER_RUNTIME_AND_DEPLOYMENT.md`
+- `docs/SITEMAP_CONTENT_AND_DESIGN.md`
+- `docs/FORMS_MIDDLEWARE_ODOO_N8N.md`
+- `docs/SEO_PERFORMANCE_AND_TRACKING.md`
+- `docs/CADDY_PRODUCTION_DEPLOYMENT.md`
+
+## Safety boundaries
+
+- Browsers never call Odoo or n8n directly.
+- No direct Odoo database writes.
+- No secrets in Git or public runtime configuration.
+- No live email delivery, Postal changes, real billing, or unrelated service changes.
+- No feature or operations branch deploys public production.
