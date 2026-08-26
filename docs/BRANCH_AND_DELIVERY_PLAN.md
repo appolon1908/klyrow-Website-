@@ -48,8 +48,8 @@ planning/production-website-blueprint
   -> feat/content-localization-pages
   -> feat/feature-pricing-conversion
   -> feat/public-api-bff
-  -> feat/legal-privacy-cookie-center
   -> feat/forms-conversion-engine
+  -> feat/legal-privacy-cookie-center
   -> feat/middleware-odoo-n8n
   -> feat/interactive-tools
   -> feat/seo-structured-data
@@ -116,11 +116,11 @@ Prerequisites: accepted architecture and shell.
 
 Required:
 
-- typed content system;
+- typed marketing content system;
 - 46 English marketing pages;
 - 46 complete Spanish marketing equivalents;
 - localized navigation/footer/breadcrumbs;
-- legal-document rendering template, but not final legal/cookie behavior;
+- legal-document rendering template, but not substantive legal/cookie behavior;
 - utility/error routes;
 - route manifest;
 - content completeness, translation, relationship, and link tests.
@@ -167,16 +167,35 @@ Required:
 
 No final form UI, production middleware credentials, direct Odoo/n8n access, Docker, Caddy, or deployment.
 
-## 7. `feat/legal-privacy-cookie-center`
+## 7. `feat/forms-conversion-engine`
 
-Prerequisites: accepted architecture, shell, content, and BFF.
+Prerequisites: accepted architecture, shell, conversion, and BFF.
+
+Required:
+
+- one shared typed form engine;
+- demo, sales, pricing, developer, partner, and migration requests;
+- support and security consultation;
+- security and abuse reporting;
+- DPA, privacy request, and opt-out intake;
+- newsletter, subprocessor, and legal update subscriptions;
+- per-form minimization and shared schemas;
+- normalization, consent separation, attribution, idempotency, anti-abuse, accessible states, and CTA wiring;
+- mocked durable middleware outcomes;
+- browser/accessibility tests.
+
+No final legal publication/cookie center, direct Odoo/n8n access, production middleware credentials, Docker, Caddy, or deployment.
+
+## 8. `feat/legal-privacy-cookie-center`
+
+Prerequisites: accepted architecture, shell, content, BFF, and shared form engine.
 
 Required:
 
 - bilingual typed legal-document registry;
 - legal hub;
 - privacy, terms, acceptable use, cookies, anti-spam, DPA, subprocessors, security disclosure, accessibility, service/support, and copyright/trademark pages;
-- cookie settings and privacy-request utilities;
+- cookie settings and privacy-request/status utilities;
 - conditional legal templates;
 - draft/review/approved/retired publication state;
 - legal version/effective-date metadata;
@@ -184,34 +203,13 @@ Required:
 - accept all, reject non-essential, customize, withdraw, and change behavior;
 - single consent/script gate;
 - GPC/applicability support;
-- privacy, DPA, update, abuse, and security forms using mocked durable APIs;
+- wire shared DPA/privacy/security/abuse/update forms rather than duplicate them;
+- legal/consent API completion;
 - noindex/index/sitemap rules;
 - browser, accessibility, security, and consent-network tests;
 - clear counsel-approval release gate.
 
 This branch does not enable GTM/GA4; the analytics branch must consume this consent service rather than create a competing store.
-
-## 8. `feat/forms-conversion-engine`
-
-Prerequisites: accepted conversion, BFF, and legal/privacy foundations.
-
-Required:
-
-- request demo;
-- contact sales;
-- pricing consultation;
-- developer interest;
-- partner application;
-- migration consultation;
-- support contact;
-- newsletter;
-- DPA/security/privacy-related forms that belong to shared form infrastructure;
-- server/client shared validation;
-- normalization, consent separation, attribution, idempotency, anti-abuse, accessible states, and CTA wiring;
-- mocked durable middleware outcomes;
-- browser/accessibility tests.
-
-No direct Odoo/n8n access, production middleware credentials, Docker, Caddy, or deployment.
 
 ## 9. `feat/middleware-odoo-n8n`
 
@@ -256,7 +254,7 @@ Required:
 
 - unique metadata;
 - canonical and reciprocal hreflang;
-- marketing and legal route sitemap rules;
+- marketing and approved-legal sitemap rules;
 - draft/noindex legal behavior;
 - robots;
 - real 404/noindex utility behavior;
@@ -386,7 +384,7 @@ Every PR includes:
 
 ```text
 PLANNING=AVAILABLE
-BRANCH_TASKS=BEING_PREPARED
+BRANCH_TASKS=AVAILABLE
 APPLICATION=NOT_COMPLETE
 STAGING=NOT_ACTIVE
 PRODUCTION=NOT_ACTIVE
