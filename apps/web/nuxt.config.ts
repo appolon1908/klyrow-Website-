@@ -6,7 +6,7 @@ export default defineNuxtConfig({
   app: {
     head: {
       htmlAttrs: { lang: 'en' },
-      titleTemplate: (titleChunk) => (titleChunk ? `${titleChunk} · Klyrow` : 'Klyrow'),
+      titleTemplate: '%s · Klyrow',
       meta: [
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
         { name: 'theme-color', content: '#5b4df7' },
