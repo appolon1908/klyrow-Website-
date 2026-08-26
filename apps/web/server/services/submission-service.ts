@@ -2,7 +2,7 @@ import { createHash, randomUUID } from 'node:crypto'
 import type { Locale, MiddlewareAdapter, RequestContext, WebsiteDomainEventEnvelope } from '@klyrow/contracts'
 import { ApiProblem } from '../errors/api-problem'
 import { InMemorySubmissionRepository, type SubmissionRepository } from '../repositories/in-memory-submission-repository'
-import { MockMiddlewareAdapter } from '../adapters/mock-middleware-adapter'
+import { createMiddlewareAdapter } from '../adapters/middleware-adapter-factory'
 import type { PublicSubmissionInput } from '../schemas/public-submission'
 
 export interface SubmissionResult {
@@ -18,6 +18,7 @@ export class SubmissionService {
   constructor(
     private readonly repository: SubmissionRepository,
     private readonly middleware: MiddlewareAdapter,
+    private readonly timeoutMs = 5000,
   ) {}
 
   async submit(input: {
@@ -44,9 +45,9 @@ export class SubmissionService {
       correlation_id: input.context.requestId,
       idempotency_key: input.idempotencyKey,
       locale: input.locale,
-      payload: input.body,
+      payload: { ...input.body },
     }
-    const acceptance = await this.middleware.submitWebsiteEvent(input.context, event, { idempotencyKey: input.idempotencyKey, timeoutMs: 5000 })
+    const acceptance = await this.middleware.submitWebsiteEvent(input.context, event, { idempotencyKey: input.idempotencyKey, timeoutMs: this.timeoutMs })
     if (!acceptance.durable) throw new ApiProblem(503, 'MIDDLEWARE_REJECTED', 'The request could not be stored durably.')
     const submissionId = `sub_${randomUUID().replaceAll('-', '')}`
     await this.repository.save({ operationId: input.operationId, keyHash, fingerprint, submissionId, receiptId: acceptance.receiptId, acceptedAt: acceptance.acceptedAt })
@@ -54,4 +55,12 @@ export class SubmissionService {
   }
 }
 
-export const submissionService = new SubmissionService(new InMemorySubmissionRepository(), new MockMiddlewareAdapter())
+const services = new Map<string, SubmissionService>()
+export const getSubmissionService = (runtimeConfig: unknown) => {
+  const configured = createMiddlewareAdapter(runtimeConfig)
+  const existing = services.get(configured.cacheKey)
+  if (existing) return existing
+  const service = new SubmissionService(new InMemorySubmissionRepository(), configured.adapter, configured.timeoutMs)
+  services.set(configured.cacheKey, service)
+  return service
+}

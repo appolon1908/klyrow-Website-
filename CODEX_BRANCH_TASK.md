@@ -1,13 +1,13 @@
-# Codex Branch Task — Legal, Privacy and Cookie Center
+# Codex Branch Task — Codestra Middleware, Odoo and n8n Integration
 
 ## Branch
 
-`feat/legal-privacy-cookie-center`
+`feat/middleware-odoo-n8n`
 
 ## Objective
 
-Build the bilingual legal-document registry, legal hub, privacy/cookie utilities, one shared consent state, and public legal/privacy request surfaces on top of the reviewed BFF and form engine.
+Replace the website BFF’s mock-only delivery boundary with a server-only, authenticated and durable Codestra middleware adapter. Keep Odoo and n8n behind middleware, preserve idempotency/correlation, and retain mock mode for local and CI execution.
 
-## Release rule
+## Safety
 
-All legal text remains `draft` and non-indexable until the operating-entity facts and counsel approval are recorded. This branch must not enable analytics, deploy infrastructure, mutate external records, or call Odoo/n8n directly.
+No browser may call middleware, Odoo or n8n directly. No direct database access, real accounting, live email activation, Docker/Nginx deployment or production mutation is authorized in this branch.
