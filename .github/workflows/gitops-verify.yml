@@ -1,0 +1,94 @@
+name: GitOps policy verification
+
+on:
+  pull_request:
+    paths:
+      - '.github/workflows/gitops-*.yml'
+      - '.github/workflows/provider-production-deploy*.yml'
+      - 'ops/gitops/**'
+      - 'ops/scripts/deploy-production.sh'
+      - 'docs/GITOPS_SECURE_DELIVERY.md'
+  push:
+    branches:
+      - ops/gitops-secure-delivery
+    paths:
+      - '.github/workflows/gitops-*.yml'
+      - '.github/workflows/provider-production-deploy*.yml'
+      - 'ops/gitops/**'
+      - 'ops/scripts/deploy-production.sh'
+      - 'docs/GITOPS_SECURE_DELIVERY.md'
+
+permissions:
+  contents: read
+
+concurrency:
+  group: gitops-verify-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  verify:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Verify scripts parse
+        run: |
+          set -Eeuo pipefail
+          python -m py_compile \
+            ops/gitops/scripts/validate-runtime-paths.py \
+            ops/gitops/scripts/validate-release-intent.py
+          bash -n \
+            ops/gitops/scripts/discover-runtime-paths.sh \
+            ops/gitops/scripts/plan-deployment.sh \
+            ops/gitops/scripts/apply-deployment.sh
+      - name: Validate fail-closed runtime inventory
+        run: |
+          set -Eeuo pipefail
+          python ops/gitops/scripts/validate-runtime-paths.py \
+            ops/gitops/environments/production/runtime-paths.json \
+            ops/gitops/environments/production/deployment-policy.json \
+            --mode plan | tee runtime-validation.txt
+          grep -Fx 'APPLY_BLOCKED=YES' runtime-validation.txt
+      - name: Validate release-intent example
+        run: |
+          set -Eeuo pipefail
+          python ops/gitops/scripts/validate-release-intent.py \
+            ops/gitops/environments/production/release-intent.example.json \
+            ops/gitops/environments/production/deployment-policy.json \
+            ops/gitops/environments/production/runtime-paths.json \
+            --mode example
+      - name: Build non-mutating production plan
+        run: |
+          set -Eeuo pipefail
+          ops/gitops/scripts/plan-deployment.sh
+          test -f artifacts/gitops-plan.json
+          python - <<'PY'
+          import json
+          with open('artifacts/gitops-plan.json', encoding='utf-8') as handle:
+              plan = json.load(handle)
+          assert plan['apply_blocked'] is True
+          assert plan['live_server_changed'] is False
+          assert 'runtime_paths_unverified' in plan['apply_blockers']
+          PY
+      - name: Reject unsafe deployment workflow patterns
+        run: |
+          set -Eeuo pipefail
+          ! grep -R --line-number -E \
+            'sudo[[:space:]]+(bash|sh)|sudo[[:space:]]+docker[[:space:]].*\*|NOPASSWD:[[:space:]]+ALL|manifest_path:' \
+            .github/workflows/gitops-*.yml ops/gitops
+      - name: Repository whitespace check
+        run: git diff --check
+      - name: Upload plan evidence
+        uses: actions/upload-artifact@v4
+        with:
+          name: gitops-plan-${{ github.sha }}
+          path: |
+            artifacts/gitops-plan.json
+            runtime-validation.txt
+          if-no-files-found: error
+          retention-days: 14
