@@ -1,7 +1,7 @@
 {
   "schema_version": 1,
   "environment": "production",
-  "source_repository": "appolon1908-hue/klyrow-Website-",
+  "source_repository": "appolon1908-hue/klyrow-Website",
   "default_branch": "main",
   "protected_environment": "production",
   "allowed_runner_labels": ["self-hosted", "linux", "x64", "klyrow-provider"],
