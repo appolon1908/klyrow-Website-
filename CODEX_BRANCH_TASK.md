@@ -1,4 +1,4 @@
-# Codex Branch Task — Hardened Docker Runtime
+# Codex Branch Task — Hardened Docker Runtime on Provider Host
 
 ## Branch
 
@@ -8,92 +8,104 @@ ops/docker-runtime
 
 ## Prerequisites
 
-Update from the accepted application, integration, SEO, analytics and performance/accessibility branches before implementation.
+Update from all accepted application, integration, SEO, legal, analytics and performance/accessibility branches.
+
+## Target
+
+```text
+Host: 37.27.128.39
+Private IP: 10.40.0.4
+Production loopback port: 18110 after free-port verification
+Staging loopback port: 18111 after free-port verification
+Public edge: existing Nginx, not Caddy
+```
+
+Read `CODEX_PROVIDER_HOST_DEPLOYMENT_TASK.md`, `docs/PROVIDER_HOST_NGINX_DEPLOYMENT.md` and `docs/DOCKER_RUNTIME_AND_DEPLOYMENT.md` completely.
 
 ## Objective
 
-Package Klyrow Website as an immutable, non-root Docker workload with safe local, staging and production compose definitions. This branch may deploy to staging only. It must not switch public production traffic.
+Package Klyrow Website as an immutable, non-root Docker workload and prove it can run safely on the same host as the Klyrow email platform. This branch may deploy to the isolated staging loopback port only. It must not switch public Nginx traffic.
 
-## Required reading
+## Protected services
 
-Read `docs/DOCKER_RUNTIME_AND_DEPLOYMENT.md` completely.
+Audit and preserve the existing Nginx edge, Klyrow gateway/API, Postal, SMTP, Mautic, Grafana, billing, identity/private gateway, Kyqra and their dependencies. Do not reuse their ports or restart/remap them.
 
 ## Required implementation
 
-- Multi-stage `Dockerfile` with dependency, build and runtime stages.
-- `.dockerignore` excluding secrets, Git data, caches, reports and local files.
-- Corepack/pnpm frozen install.
-- Nitro `.output` only in runtime image.
-- Dedicated non-root user.
-- `NODE_ENV=production`.
-- Graceful SIGTERM and signal forwarding.
-- Healthcheck using `/api/v1/health`.
-- Startup environment validation.
-- Read-only root filesystem where practical.
-- tmpfs for `/tmp`.
-- `no-new-privileges` and dropped capabilities.
-- No Docker socket, host network or privileged mode.
-- No secret in image layers, labels or compose source.
-- `docker-compose.local.yml`.
-- `docker-compose.staging.yml`.
-- `docker-compose.production.yml` or approved production fragment using immutable image digest.
-- Resource limits and log rotation guidance.
-- Build and smoke scripts.
-- Staging deploy and rollback scripts.
-- Image labels for source/revision/version.
-- Image scan.
-- SBOM.
-- Immutable GHCR publication workflow only through explicit dispatch/release conditions.
+- multi-stage Dockerfile;
+- `.dockerignore`;
+- frozen pnpm install and Nitro-only runtime;
+- dedicated non-root user;
+- graceful SIGTERM;
+- read-only root filesystem where practical;
+- tmpfs `/tmp`;
+- `no-new-privileges` and all capabilities dropped;
+- no Docker socket, host network or privileged mode;
+- explicit environment allowlist;
+- health/readiness;
+- resource limits and log rotation;
+- local, provider-host staging and production compose fragments;
+- loopback-only published ports;
+- host/preflight and free-port checks;
+- protected-service health verification before/after tests;
+- isolated release directories;
+- exact SHA/digest build, smoke, stage, verify and rollback scripts;
+- image labels, scan, SBOM and immutable GHCR publication;
+- no secret in image layers, labels, compose source or logs.
 
-## Runtime topology
+## Required compose behavior
+
+Staging must bind only to:
 
 ```text
-Caddy
-  -> loopback/private Docker upstream :3100
-  -> Nuxt/Nitro
+127.0.0.1:18111
 ```
 
-Do not expose port 3100 publicly.
+or an approved free alternative recorded in evidence.
+
+Production compose must default to:
+
+```text
+127.0.0.1:18110
+```
+
+or an approved free alternative, but this branch must not activate public traffic.
+
+Port 3100 is prohibited for this website.
 
 ## Required tests
 
-- Reproducible Docker build from clean checkout.
-- Runtime contains required output and excludes source/tooling/secrets.
-- Container runs as non-root.
-- Read-only filesystem behavior.
-- Healthcheck and readiness.
-- SIGTERM graceful shutdown.
-- Restart recovery.
-- Local compose smoke.
-- Staging compose smoke.
-- Route, static asset and form-mock checks.
-- Resource-limit behavior.
-- Secret scan, dependency audit, image scan and SBOM.
-- No live Odoo/n8n/billing/email side effects.
-- Rollback rehearsal in staging.
+- reproducible clean build;
+- runtime excludes source/tooling/secrets;
+- non-root/read-only behavior;
+- health/readiness;
+- graceful shutdown and restart recovery;
+- free-port guard;
+- staging start on provider host;
+- route, asset and form-mock smoke;
+- CPU/RAM/disk/log behavior;
+- Klyrow gateway, Postal, SMTP, Mautic, Grafana and Kyqra unchanged;
+- no live Odoo/n8n/billing/email side effects;
+- dependency, secret and image scans;
+- SBOM and digest evidence;
+- staging rollback rehearsal.
 
-## Deployment scripts
+## Deployment-script rules
 
-Scripts must:
-
-- verify host identity and prerequisites;
-- never print secrets;
-- use isolated release directories;
-- reference exact SHA/image digest;
-- preserve previous release;
-- be idempotent;
-- stop on failed health/readiness;
-- avoid restarting the Docker daemon or unrelated services.
+Scripts must verify host identity, exact artifact, free port, required secret files and protected-service health without printing secrets. They must be idempotent, preserve the prior website release and avoid restarting Nginx, Docker daemon or unrelated services.
 
 ## Git delivery
 
-Push only this branch, open/update one draft PR and attach image digest/scan/SBOM/staging evidence. Stop before Caddy edge or public production.
+Push only this branch, update its draft PR with exact image/digest/scan/SBOM/staging/protected-service evidence, and stop before `ops/provider-host-nginx-edge`.
 
 ## Prohibited
 
-- No public production switch.
-- No mutable `latest` deployment.
-- No source mounts in production.
-- No build inside live web root.
-- No unrelated stack restart.
-- No Postal/Odoo/n8n/Keycloak change.
+- no public production switch;
+- no Caddy installation;
+- no port 3100;
+- no mutable `latest` deployment;
+- no source mount in production;
+- no build in live release path;
+- no Nginx activation;
+- no provider-stack restart;
+- no Postal/Odoo/n8n/Keycloak or billing change.
