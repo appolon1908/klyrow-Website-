@@ -1,13 +1,19 @@
-# Codex Branch Task — Codestra Middleware, Odoo and n8n Integration
+# Codex Branch Task — Interactive Public Tools
 
 ## Branch
 
-`feat/middleware-odoo-n8n`
+`feat/interactive-tools`
 
 ## Objective
 
-Replace the website BFF’s mock-only delivery boundary with a server-only, authenticated and durable Codestra middleware adapter. Keep Odoo and n8n behind middleware, preserve idempotency/correlation, and retain mock mode for local and CI execution.
+Add useful, bounded and accessible public tools without real email, billing, arbitrary URL requests, private-network probing or direct Odoo/n8n activity.
 
-## Safety
+## Scope
 
-No browser may call middleware, Odoo or n8n directly. No direct database access, real accounting, live email activation, Docker/Nginx deployment or production mutation is authorized in this branch.
+- approved-configuration pricing estimate;
+- DNS-only domain readiness;
+- fixture-only API sandbox;
+- migration plan generator;
+- static public-content search;
+- approved scheduling handoff;
+- strict input, time, result and rate limits.
