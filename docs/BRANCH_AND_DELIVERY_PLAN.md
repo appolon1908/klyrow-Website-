@@ -2,23 +2,32 @@
 
 ## Objective
 
-Build the public Klyrow website through focused, independently reviewable branches. Keep design, content, APIs, forms, integrations, tools, SEO, analytics, performance, Docker and Caddy concerns separate.
+Build the Klyrow public website through small, reviewable branches while keeping architecture cleanup, legal/privacy behavior, heavy interactive work, infrastructure, and production activation isolated.
 
-## Authoritative reading
+The presence of a branch or pull request means only that a workspace exists. Use `docs/IMPLEMENTATION_STATUS_AND_RELEASE_TRUTH.md` for status language.
 
-Codex must read:
+## Authoritative planning documents
+
+Read before implementation:
 
 1. `CODEX_WEBSITE_PRODUCTION_TASK.md`
 2. `CODEX_WEBSITE_HARDENING_AND_DOCKER_TASK.md`
-3. `docs/API_FORM_CTA_CONTRACT.md`
-4. `docs/ENHANCED_FEATURES_AND_BRANCHES.md`
-5. `docs/DOCKER_RUNTIME_AND_DEPLOYMENT.md`
-6. the original sitemap, forms, SEO and Caddy documents;
-7. the active branch's `CODEX_BRANCH_TASK.md`.
+3. `docs/IMPLEMENTATION_STATUS_AND_RELEASE_TRUTH.md`
+4. `docs/REPOSITORY_ARCHITECTURE_AND_API_CATALOG.md`
+5. `docs/API_FORM_CTA_CONTRACT.md`
+6. `docs/LEGAL_PRIVACY_COOKIE_COMPLIANCE.md`
+7. `docs/ENHANCED_FEATURES_AND_BRANCHES.md`
+8. `docs/DOCKER_RUNTIME_AND_DEPLOYMENT.md`
+9. `docs/SITEMAP_CONTENT_AND_DESIGN.md`
+10. `docs/FORMS_MIDDLEWARE_ODOO_N8N.md`
+11. `docs/SEO_PERFORMANCE_AND_TRACKING.md`
+12. `docs/CADDY_PRODUCTION_DEPLOYMENT.md`
+
+When an older document conflicts with the modular architecture, API catalog, legal/privacy contract, or this branch plan, the newer focused contract controls.
 
 ## Superseded broad scaffolds
 
-The following early scaffolds must not receive new implementation:
+Do not implement on:
 
 ```text
 feat/nuxt4-marketing-site
@@ -28,17 +37,19 @@ ops/caddy-production
 release/website-production-readiness
 ```
 
-They are retained only for history and are replaced by the focused branches below.
+They remain for history only.
 
-## Authoritative branch sequence
+## Authoritative 15-branch sequence
 
 ```text
 planning/production-website-blueprint
+  -> refactor/modular-website-architecture
   -> feat/site-shell-design-system
   -> feat/content-localization-pages
   -> feat/feature-pricing-conversion
   -> feat/public-api-bff
   -> feat/forms-conversion-engine
+  -> feat/legal-privacy-cookie-center
   -> feat/middleware-odoo-n8n
   -> feat/interactive-tools
   -> feat/seo-structured-data
@@ -49,294 +60,333 @@ planning/production-website-blueprint
   -> release/website-production-v1
 ```
 
-This list is a dependency order, not permission to merge without review. Before implementation, update each branch from its latest accepted prerequisites.
+Before implementation, each branch must be updated or recreated from its latest accepted prerequisites. Scaffold SHAs are not implementation baselines.
 
 ## 1. `planning/production-website-blueprint`
 
 Documentation and contracts only:
 
-- route and content inventory;
-- design requirements;
-- frontend/backend boundary;
-- CTA/form/API registry;
-- middleware/Odoo/n8n contracts;
-- SEO/tracking/performance requirements;
-- Docker runtime;
-- Caddy deployment and rollback;
+- product/page inventory;
+- architecture and module boundaries;
+- API/form/CTA contracts;
+- legal/privacy/cookie requirements;
+- SEO, analytics, performance, accessibility, Docker, Caddy, release, and rollback requirements;
 - branch tasks and acceptance evidence.
 
-No application code deploys from this branch.
+No application code or production deployment from this branch.
 
-## 2. `feat/site-shell-design-system`
+## 2. `refactor/modular-website-architecture`
 
-Required implementation:
+Objective: create a clean implementation foundation before features are added.
 
-- Nuxt 4, Vue 3 and TypeScript scaffold;
-- Node/pnpm baseline and committed lock file;
-- original Klyrow design tokens;
-- typography, spacing, surfaces and responsive grid;
-- accessible header, mega menus, mobile drawer and footer;
-- reusable button/link/input/select/textarea/checkbox/radio/card/accordion/tab/dialog/toast components;
-- CTA rendering primitive backed by typed definitions;
-- English/Spanish localization framework;
-- base error, loading, empty and offline states;
-- unit/component/keyboard/accessibility tests.
+Required:
 
-Excludes bulk page content, forms, server APIs, middleware, SEO, analytics and Docker.
+- pnpm workspace;
+- `apps/web` Nuxt application boundary;
+- shared `packages/contracts`, content schema, i18n, analytics contracts, test utilities, and lint configuration;
+- typed centralized environment/configuration layer;
+- client/server import boundaries;
+- path aliases and export maps;
+- strict TypeScript;
+- lint/format/test/build foundations;
+- route, form, CTA, API, and legal registry interfaces;
+- module-boundary tests;
+- no user-facing feature expansion.
 
-## 3. `feat/content-localization-pages`
+Must not add bulk pages, live forms, integrations, Docker/Caddy deployment, or production changes.
 
-Prerequisite: accepted shell/design system.
+## 3. `feat/site-shell-design-system`
 
-Required implementation:
+Prerequisite: accepted modular architecture.
 
-- data-driven page content schema;
-- 46 English indexable pages;
-- 46 complete Spanish equivalents;
-- legal and utility routes;
-- localized navigation, footer and breadcrumbs;
-- route manifest and localized completeness tests;
-- crawlable links between related content;
-- no thin, duplicated or placeholder translations.
+Required:
 
-## 4. `feat/feature-pricing-conversion`
+- Nuxt 4/Vue 3 application shell;
+- design tokens and reusable components;
+- responsive header, mega menus, mobile navigation, footer, breadcrumbs, dialogs, alerts, toasts, and error boundaries;
+- localization framework;
+- CTA primitive consuming the typed registry;
+- foundational unit/component/browser/accessibility tests.
 
-Prerequisites: accepted shell and content branches.
+No bulk content, real forms/APIs, integrations, analytics, Docker, Caddy, or deployment.
 
-Required implementation:
+## 4. `feat/content-localization-pages`
+
+Prerequisites: accepted architecture and shell.
+
+Required:
+
+- typed marketing content system;
+- 46 English marketing pages;
+- 46 complete Spanish marketing equivalents;
+- localized navigation/footer/breadcrumbs;
+- legal-document rendering template, but not substantive legal/cookie behavior;
+- utility/error routes;
+- route manifest;
+- content completeness, translation, relationship, and link tests.
+
+No live forms, integrations, analytics, Docker, Caddy, or deployment.
+
+## 5. `feat/feature-pricing-conversion`
+
+Prerequisites: accepted shell and content.
+
+Required:
 
 - five audience landing experiences;
-- 21 dedicated feature pages;
+- 21 feature pages;
 - pricing and plan comparison;
-- approved-configuration pricing behavior;
-- contact-sales fallback when price values are absent;
-- CTA registry and all global/contextual CTAs;
-- accessible popup and announcement behavior;
-- automated route/form/external/download/auth CTA checks;
-- no placeholders, fake proof or fabricated commercial claims.
+- approved-value configuration only;
+- use-case selector;
+- conversion bands;
+- popup/announcement behavior;
+- environment-driven sign-in/docs/status/scheduling links;
+- typed CTA registry and dead-action tests.
 
-## 5. `feat/public-api-bff`
+No real form submission, middleware/Odoo/n8n, analytics loader, Docker, Caddy, or deployment.
 
-May proceed in parallel after the shell contract is stable.
+## 6. `feat/public-api-bff`
 
-Required implementation:
+Prerequisites: accepted architecture and shell.
 
-- same-origin `/api/v1` server framework;
-- public configuration endpoint;
-- health/readiness endpoints;
-- common validation and response types;
-- RFC 7807-style problem responses;
-- request-ID propagation;
-- idempotency interface;
-- CSRF/origin controls;
-- request body limits;
-- rate-limit abstraction;
+Required:
+
+- clean `/api/v1` route structure;
+- shared request context and request IDs;
+- typed shared schemas;
+- success and RFC 7807 problem responses;
+- idempotency;
+- CSRF/origin, rate/body/cost limits;
 - safe redirects;
-- API docs and contract tests;
-- mocked middleware adapter.
+- typed public configuration;
+- health/readiness;
+- public content/legal metadata APIs;
+- consent, form, privacy, legal-update, abuse/security, and tool API contracts;
+- mocked durable middleware adapter;
+- OpenAPI/API manifest and contract tests.
 
-Excludes real forms UI and production middleware credentials.
+No final form UI, production middleware credentials, direct Odoo/n8n access, Docker, Caddy, or deployment.
 
-## 6. `feat/forms-conversion-engine`
+## 7. `feat/forms-conversion-engine`
 
-Prerequisites: accepted conversion and BFF branches.
+Prerequisites: accepted architecture, shell, conversion, and BFF.
 
-Required implementation:
+Required:
 
-- demo, sales, pricing, developer, partner, migration, support and newsletter forms;
-- typed schemas;
-- field normalization;
-- service-contact versus marketing-consent separation;
-- UTM/referrer/locale capture;
-- honeypot/timing/CAPTCHA controls;
-- accessible pending, validation, duplicate, rate-limited, success and retryable-failure states;
-- form-to-API and CTA-to-form registry validation;
-- component/browser/accessibility/security tests;
-- mocked durable middleware outcomes.
+- one shared typed form engine;
+- demo, sales, pricing, developer, partner, and migration requests;
+- support and security consultation;
+- security and abuse reporting;
+- DPA, privacy request, and opt-out intake;
+- newsletter, subprocessor, and legal update subscriptions;
+- per-form minimization and shared schemas;
+- normalization, consent separation, attribution, idempotency, anti-abuse, accessible states, and CTA wiring;
+- mocked durable middleware outcomes;
+- browser/accessibility tests.
 
-## 7. `feat/middleware-odoo-n8n`
+No final legal publication/cookie center, direct Odoo/n8n access, production middleware credentials, Docker, Caddy, or deployment.
 
-Prerequisites: accepted BFF and forms branches.
+## 8. `feat/legal-privacy-cookie-center`
 
-Required implementation:
+Prerequisites: accepted architecture, shell, content, BFF, and shared form engine.
+
+Required:
+
+- bilingual typed legal-document registry;
+- legal hub;
+- privacy, terms, acceptable use, cookies, anti-spam, DPA, subprocessors, security disclosure, accessibility, service/support, and copyright/trademark pages;
+- cookie settings and privacy-request/status utilities;
+- conditional legal templates;
+- draft/review/approved/retired publication state;
+- legal version/effective-date metadata;
+- typed cookie/storage registry;
+- accept all, reject non-essential, customize, withdraw, and change behavior;
+- single consent/script gate;
+- GPC/applicability support;
+- wire shared DPA/privacy/security/abuse/update forms rather than duplicate them;
+- legal/consent API completion;
+- noindex/index/sitemap rules;
+- browser, accessibility, security, and consent-network tests;
+- clear counsel-approval release gate.
+
+This branch does not enable GTM/GA4; the analytics branch must consume this consent service rather than create a competing store.
+
+## 9. `feat/middleware-odoo-n8n`
+
+Prerequisites: accepted BFF, forms, and legal/privacy contracts.
+
+Required:
 
 - authenticated Codestra middleware client;
-- approved secret-file/mTLS handling;
-- durable acceptance contract;
-- lead and consent event schemas;
-- Odoo contact/company/CRM/activity/support mappings;
-- n8n non-authoritative notification/routing contracts;
-- idempotency, timeout, bounded retry and circuit behavior;
-- dead-letter/reconciliation visibility;
+- durable acceptance validation;
+- request/event/correlation propagation;
+- bounded retry and circuit behavior;
+- website lead, consent, privacy, legal-update, abuse, and security event schemas;
+- Odoo CRM/contact/activity/helpdesk/privacy-case mappings;
+- non-authoritative n8n routing, notifications, reminders, and escalation contracts;
+- dead-letter/reconciliation guidance;
 - metrics and privacy-safe logs;
-- test-mode integration verification.
+- test-mode evidence.
 
-No browser-to-Odoo/n8n calls and no direct Odoo database access.
+No browser direct Odoo/n8n calls, direct Odoo database access, real accounting/billing, live email sending, Docker, Caddy, or deployment.
 
-## 8. `feat/interactive-tools`
+## 10. `feat/interactive-tools`
 
-Prerequisites: accepted conversion, BFF and forms branches.
+Prerequisites: accepted conversion, BFF, and forms.
 
-Required implementation:
+Required:
 
-- configuration-driven pricing estimate;
+- configuration-driven pricing estimator;
 - DNS-only domain readiness checker;
 - no-side-effect API sandbox;
 - migration chooser;
-- static content search;
+- static public-content search;
 - approved scheduling handoff;
-- strict cost/rate/body/time limits;
-- lazy loading/code splitting;
-- no arbitrary URL fetch, real email, billing or Odoo accounting effects.
+- lazy loading, strict limits, security tests, and accessible UI.
 
-## 9. `feat/seo-structured-data`
+No real email, billing, arbitrary URL fetch, private-network probe, direct Odoo/n8n access, Docker, Caddy, or deployment.
 
-Prerequisites: accepted content and conversion branches.
+## 11. `feat/seo-structured-data`
 
-Required implementation:
+Prerequisites: accepted content, conversion, and legal/privacy pages.
+
+Required:
 
 - unique metadata;
-- canonical URLs;
-- reciprocal English/Spanish hreflang and `x-default`;
-- sitemap index and locale sitemaps;
-- robots.txt;
-- real 404;
-- Organization/WebSite/BreadcrumbList and evidence-supported page schema;
-- link, metadata, sitemap and structured-data validation;
-- Search Console configuration hook;
-- no invented reviews, ratings, prices or claims.
+- canonical and reciprocal hreflang;
+- marketing and approved-legal sitemap rules;
+- draft/noindex legal behavior;
+- robots;
+- real 404/noindex utility behavior;
+- accurate structured data;
+- internal linking;
+- automated route, link, metadata, sitemap, and schema validation.
 
-## 10. `feat/analytics-consent`
+No analytics loader, invented proof/ratings/prices, Docker, Caddy, or deployment.
 
-Prerequisites: accepted conversion and forms branches.
+## 12. `feat/analytics-consent`
 
-Required implementation:
+Prerequisites: accepted conversion, forms, and legal/privacy cookie center.
 
-- consent manager and persistence policy;
-- optional GTM/GA4 adapter;
-- approved event dictionary;
-- CTA/form/locale/resource/popup events;
-- UTM attribution;
-- test/development traffic labeling;
-- sensitive-value filters;
-- no optional marketing analytics before required consent.
+Required:
 
-## 11. `perf/core-web-vitals-accessibility`
+- consume the existing consent state and category gate;
+- optional environment-configured GTM/GA4 adapter;
+- typed event dictionary;
+- CTA/form/tool attribution;
+- UTM normalization;
+- test-traffic labeling;
+- sensitive-payload filters;
+- proof that optional analytics does not load before permission in strict mode.
 
-Prerequisites: all selected user-facing branches.
+No separate cookie-consent store, raw form tracking, direct Odoo/n8n changes, Docker, Caddy, or deployment.
 
-Required implementation:
+## 13. `perf/core-web-vitals-accessibility`
 
-- bundle and route analysis;
-- image/font optimization;
-- lazy loading and hydration reduction;
-- mobile/tablet/laptop/desktop Playwright matrix;
-- axe tests and WCAG 2.2 AA remediation;
-- Lighthouse CI;
+Prerequisites: all selected user-facing branches accepted.
+
+Required:
+
+- measure/remediate bundles, images, fonts, hydration, lazy loading, and third parties;
 - Core Web Vitals instrumentation;
-- explicit budget results and reviewed exceptions;
-- no unmeasured score claims.
+- Playwright device matrix;
+- axe and manual keyboard behavior;
+- legal/cookie/privacy flow accessibility;
+- 200% zoom;
+- WCAG 2.2 AA;
+- exact Lighthouse and budget evidence.
 
-## 12. `ops/docker-runtime`
+No unrelated feature expansion, disabled audits, fabricated scores, Docker, Caddy, or deployment.
 
-Prerequisites: accepted application branches and performance certification.
+## 14. `ops/docker-runtime`
 
-Required implementation:
+Prerequisites: accepted application and performance branches.
 
-- multi-stage Dockerfile;
+Required:
+
+- multi-stage non-root Dockerfile;
 - `.dockerignore`;
 - local/staging/production compose;
-- non-root/read-only runtime;
-- health/readiness and SIGTERM handling;
-- environment validation;
-- immutable image publication;
-- image scan and SBOM;
-- staging deployment and rollback scripts;
-- no public production activation.
+- typed environment validation;
+- read-only runtime/tmpfs where practical;
+- health/readiness and graceful shutdown;
+- immutable SHA/digest publication;
+- image scan, SBOM, provenance where supported;
+- staging deploy, smoke, verify, and rollback scripts.
 
-## 13. `ops/caddy-edge`
+No public production switch, mutable `latest` deployment, source mount in production, Docker-daemon restart, Caddy activation, or unrelated changes.
+
+## 15. `ops/caddy-edge`
 
 Prerequisite: accepted Docker runtime.
 
-Required implementation:
+Required:
 
-- Klyrow-only Caddy fragment;
-- apex and `www` behavior;
-- HTTPS readiness;
-- compression, cache and security headers;
-- request/body limits;
-- privacy-safe logs;
-- complete Caddy backup and validation;
-- staging edge deployment;
-- Caddy-only reload and rollback scripts;
-- no unrelated site changes and no public activation.
+- audit real Caddy environment;
+- back up complete config;
+- add only Klyrow site fragment;
+- apex/`www` behavior;
+- HTTPS, compression, caching, security headers, body limits, privacy-safe logs;
+- validate/reload/rollback scripts;
+- staging edge verification.
 
-## 14. `release/website-production-v1`
+No public activation, DNS mutation, full stack restart, unrelated site edit, TLS private-key commit, or product-service mutation.
 
-Prerequisites: all selected branches independently reviewed and integrated into the exact release candidate.
+## 16. `release/website-production-v1`
+
+Prerequisite: all selected feature, performance, Docker, and Caddy PRs independently reviewed and accepted.
 
 Responsibilities:
 
-- exact SHA, immutable image digest and checksums;
-- complete CI evidence;
-- route/locale/sitemap count validation;
-- CTA and form registry validation;
+- integrate exact reviewed SHAs;
+- immutable release artifact/digest;
+- full route/locale/CTA/form/API/legal/consent/integration/SEO/analytics/accessibility/performance/container/Caddy certification;
 - staging deployment;
-- middleware durability evidence;
-- approved Odoo/n8n test-mode evidence;
-- DNS/TLS/Caddy preflight;
-- mobile/desktop/accessibility/SEO/Lighthouse checks;
+- middleware/Odoo/n8n approved test routing;
+- DNS/TLS preflight;
 - rollback rehearsal;
 - public website deployment;
-- post-deploy monitoring;
-- sitemap/Search Console handoff;
-- final completion report.
+- post-deploy verification;
+- prior release retention;
+- final evidence report.
 
-Only this branch may activate the public website after all gates pass.
+Only this branch may activate the public website.
 
-## Pull request requirements
+## Pull-request requirements
 
-Every implementation PR contains:
+Every PR includes:
 
-1. scope and exclusions;
-2. implementation summary;
-3. API/route/component/form/CTA changes;
+1. exact scope and prerequisite SHAs;
+2. current status using the approved status vocabulary;
+3. implementation;
 4. exact tests and results;
-5. security impact;
-6. performance impact;
+5. API/route/form/CTA/legal registry changes;
+6. security/privacy impact;
 7. accessibility impact;
-8. screenshots or browser evidence;
-9. operational changes;
-10. rollback notes;
-11. limitations/blockers;
-12. confirmation that production was not changed.
+8. performance impact;
+9. screenshots/browser evidence where applicable;
+10. operational impact;
+11. rollback notes;
+12. known limitations/blockers;
+13. confirmation that production was not changed unless this is the authorized release PR.
 
 ## Commit rules
 
-- Use logical commits.
-- Do not force-push after review begins.
-- Do not rewrite unrelated history.
-- Commit `pnpm-lock.yaml`.
-- Do not commit `.env`, credentials, private analytics values, Odoo keys, middleware keys, n8n credentials, CAPTCHA secrets or TLS private keys.
-- Do not commit mutable build output to feature branches.
+- logical commits;
+- no force-push after review begins;
+- no unrelated history rewrite;
+- committed `pnpm-lock.yaml`;
+- no `.env`, credentials, analytics secrets, Odoo/middleware/n8n keys, or TLS private keys;
+- no mutable build output committed to feature branches;
+- no application module that violates the dependency boundaries in `docs/REPOSITORY_ARCHITECTURE_AND_API_CATALOG.md`.
 
-## Review flow
+## Current program status
 
 ```text
-planning
-  -> shell/design
-  -> content
-  -> feature/pricing/conversion
-  -> BFF/API
-  -> forms
-  -> middleware/Odoo/n8n
-  -> interactive tools
-  -> SEO
-  -> analytics/consent
-  -> performance/accessibility
-  -> Docker
-  -> Caddy
-  -> production release
+PLANNING=AVAILABLE
+BRANCH_TASKS=AVAILABLE
+APPLICATION=NOT_COMPLETE
+STAGING=NOT_ACTIVE
+PRODUCTION=NOT_ACTIVE
+LIVE=NO
 ```
-
-A branch name or empty task file is not proof of implementation. Codex must provide exact evidence for every stage.
