@@ -37,7 +37,7 @@ jobs:
       - name: Collect read-only runtime evidence
         run: |
           set -Eeuo pipefail
-          ops/gitops/scripts/discover-runtime-paths.sh artifacts
+          bash ops/gitops/scripts/discover-runtime-paths.sh artifacts
       - name: Assert discovery did not claim mutation
         run: |
           set -Eeuo pipefail
