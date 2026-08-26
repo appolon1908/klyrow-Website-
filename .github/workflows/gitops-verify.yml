@@ -46,6 +46,8 @@ jobs:
             ops/gitops/scripts/discover-runtime-paths.sh \
             ops/gitops/scripts/plan-deployment.sh \
             ops/gitops/scripts/apply-deployment.sh
+      - name: Run GitOps policy regression tests
+        run: python -m unittest -v ops.gitops.tests.test_gitops_validators
       - name: Validate fail-closed runtime inventory
         run: |
           set -Eeuo pipefail
@@ -65,7 +67,7 @@ jobs:
       - name: Build non-mutating production plan
         run: |
           set -Eeuo pipefail
-          ops/gitops/scripts/plan-deployment.sh
+          bash ops/gitops/scripts/plan-deployment.sh
           test -f artifacts/gitops-plan.json
           python - <<'PY'
           import json
