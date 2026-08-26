@@ -1,4 +1,4 @@
-# Codex Branch Task — Public API BFF and Contract Cleanup
+# Codex Branch Task — Public API BFF, Service Layer and Contract Cleanup
 
 ## Branch
 
@@ -6,112 +6,329 @@
 feat/public-api-bff
 ```
 
-## Prerequisite
+## Status
 
-Update from the accepted shell/design-system baseline before implementation.
+```text
+FEATURE_STATUS=SCAFFOLDED
+APPLICATION_CODE_PRESENT=NO
+API_ENDPOINTS_IMPLEMENTED=NO
+STAGING_CHANGED=NO
+PRODUCTION_CHANGED=NO
+```
+
+## Prerequisites
+
+Before implementation, recreate/update this branch from accepted:
+
+```text
+refactor/modular-website-architecture
+feat/site-shell-design-system
+```
+
+Read completely:
+
+1. `docs/IMPLEMENTATION_STATUS_AND_RELEASE_TRUTH.md`
+2. `docs/REPOSITORY_ARCHITECTURE_AND_API_CATALOG.md`
+3. `docs/API_FORM_CTA_CONTRACT.md`
+4. `docs/LEGAL_PRIVACY_COOKIE_COMPLIANCE.md`
+5. `docs/BRANCH_AND_DELIVERY_PLAN.md`
+6. the remaining website, integration, SEO, security, Docker, Caddy, and release contracts.
 
 ## Objective
 
-Build a clean, versioned, same-origin Nuxt/Nitro BFF API foundation. This branch owns API conventions, security primitives and mocked upstream adapters—not final form UI or production middleware credentials.
+Build a clean, versioned, same-origin Nuxt/Nitro BFF foundation with thin route handlers, shared contracts, centralized security primitives, application services, mocked durable adapters, and a complete API manifest.
 
-## Required endpoints
+This branch owns API conventions and contract-ready endpoint behavior. It does not own final form UI, final legal pages, real production middleware credentials, Docker, Caddy, staging, or production.
+
+## Required structure
+
+Use the modular structure defined in `docs/REPOSITORY_ARCHITECTURE_AND_API_CATALOG.md`:
 
 ```text
-GET  /api/v1/public/config
-GET  /api/v1/health
-GET  /api/v1/ready
+apps/web/server/api/v1
+apps/web/server/services
+apps/web/server/repositories
+apps/web/server/adapters
+apps/web/server/schemas
+apps/web/server/errors
+apps/web/server/observability
+packages/contracts
+```
+
+Route handlers remain thin. Do not put retry loops, Odoo/n8n mapping, consent policy, logging of raw payloads, or inline environment parsing in handlers.
+
+## Required endpoint catalog
+
+### Runtime and public configuration
+
+```text
+GET /api/v1/health
+GET /api/v1/ready
+GET /api/v1/public/config
+GET /api/v1/public/navigation
+GET /api/v1/public/features
+GET /api/v1/public/pricing
+GET /api/v1/public/legal-documents
+GET /api/v1/public/legal-documents/:slug
+```
+
+### Cookie and consent contracts
+
+```text
+GET  /api/v1/consent/cookies/config
+GET  /api/v1/consent/cookies/current
+PUT  /api/v1/consent/cookies
+POST /api/v1/consent/cookies/reset
+```
+
+This branch may use typed fixtures for legal documents and cookie registry data. Final UI, legal publication state, and consent script gating belong to `feat/legal-privacy-cookie-center`.
+
+### Lead and consultation operations
+
+```text
 POST /api/v1/leads/demo
 POST /api/v1/leads/sales
 POST /api/v1/leads/pricing
 POST /api/v1/leads/developer-interest
 POST /api/v1/leads/partner-application
 POST /api/v1/leads/migration-consultation
+POST /api/v1/leads/dpa-request
+POST /api/v1/leads/security-consultation
+```
+
+### Support, abuse, and security
+
+```text
 POST /api/v1/support/contact
+POST /api/v1/abuse/report
+POST /api/v1/security/report
+```
+
+### Subscriptions and legal updates
+
+```text
 POST /api/v1/subscriptions/newsletter
+POST /api/v1/subscriptions/subprocessor-updates
+POST /api/v1/subscriptions/legal-updates
+```
+
+### Privacy operations
+
+```text
+POST /api/v1/privacy/requests
+GET  /api/v1/privacy/requests/:publicToken
+POST /api/v1/privacy/opt-out
+```
+
+Use safe fixtures/status repositories in this branch. No external-system deletion or real privacy fulfillment.
+
+### Interactive tool contracts
+
+```text
 POST /api/v1/tools/pricing-estimate
 POST /api/v1/tools/domain-readiness
 POST /api/v1/tools/api-sandbox
+POST /api/v1/tools/migration-plan
+GET  /api/v1/tools/content-search
 ```
 
-Form/tool handlers may use typed fixtures and a mocked durable adapter in this branch.
+Tools may use fixtures. No real email, billing, arbitrary URL fetch, private-network probe, Odoo/n8n call, or production provider.
 
-## Required implementation
+## Required API implementation
 
-- Versioned `/api/v1` route organization.
-- Shared request context and request-ID generation/propagation.
-- Typed validation schemas.
-- Common success envelopes.
-- RFC 7807-style `application/problem+json` errors.
-- Stable machine-readable error codes.
-- Idempotency-key validation and storage interface.
-- Same-key/same-payload duplicate behavior.
-- Same-key/different-payload conflict behavior.
-- Origin and CSRF controls for browser writes.
-- Request body limits.
-- Per-route cost/rate-limit interface.
-- Safe redirect/allowed-host utility.
-- Timeout, bounded retry and circuit interfaces for future middleware client.
-- Privacy-safe structured logging.
-- Public runtime configuration allowlist.
-- Health and readiness behavior.
-- Generated or documented OpenAPI-compatible contracts and examples.
-- Mocked middleware accepted/rejected/unavailable responses.
+### Request context
 
-## Error codes
+- request ID generation/propagation;
+- receipt timestamp;
+- locale resolution;
+- route/operation ID;
+- privacy-safe client classification;
+- correlation ID support.
 
-At minimum:
+### Shared schemas
+
+- define once in `packages/contracts`;
+- consume from client-facing fixtures and server routes;
+- strict input limits;
+- no duplicate ad hoc request types;
+- no unbounded `any`.
+
+### Responses
+
+- common safe success envelope;
+- `application/problem+json` errors;
+- stable machine-readable codes;
+- no stack traces/raw upstream payloads/internal paths/secrets.
+
+### Idempotency
+
+- required for externally visible writes;
+- key validation;
+- request fingerprint;
+- same key/same payload duplicate response;
+- same key/different payload `409`;
+- in-progress duplicate behavior;
+- storage interface and deterministic test repository.
+
+### Browser security
+
+- allowed-origin policy;
+- CSRF protection for state-changing browser requests;
+- body limits;
+- route-specific rate/cost limits;
+- safe redirect/allowed-host utility;
+- optional CAPTCHA adapter interface;
+- no open redirect/proxy/URL-fetch behavior.
+
+### Middleware boundary
+
+Create a mocked `MiddlewareAdapter` with:
+
+```text
+accepted with durable receipt
+accepted duplicate
+rejected
+unavailable
+timeout
+malformed response
+circuit open
+```
+
+User-facing success is permitted only for the durable accepted/duplicate fixtures.
+
+### Configuration
+
+- typed centralized configuration;
+- public safe allowlist;
+- server secret exclusion;
+- startup validation;
+- optional integration disabled/degraded state;
+- public-config bundle/response tests.
+
+### Observability
+
+- structured logs with request/operation IDs;
+- no full form/free-text/privacy payloads;
+- request duration/status metrics;
+- acceptance/duplicate/rejection metrics;
+- rate-limit and dependency-state metrics.
+
+### API documentation
+
+Generate or validate:
+
+- OpenAPI-compatible operation manifest;
+- request/response examples;
+- stable error-code catalog;
+- form-to-endpoint registry;
+- operation ownership/dependency map;
+- public versus server-only classification.
+
+## Minimum error codes
 
 ```text
 VALIDATION_ERROR
+MALFORMED_REQUEST
 ORIGIN_DENIED
 CSRF_DENIED
 BODY_TOO_LARGE
 IDEMPOTENCY_REQUIRED
 IDEMPOTENCY_CONFLICT
+REQUEST_IN_PROGRESS
 RATE_LIMITED
 CONSENT_REQUIRED
 CAPTCHA_REQUIRED
 CAPTCHA_FAILED
 CONFIGURATION_UNAVAILABLE
+LEGAL_DOCUMENT_UNAVAILABLE
+PRIVACY_REQUEST_NOT_FOUND
+PUBLIC_TOKEN_INVALID
+PUBLIC_TOKEN_EXPIRED
 MIDDLEWARE_UNAVAILABLE
 MIDDLEWARE_REJECTED
+MIDDLEWARE_RESPONSE_INVALID
 SERVICE_DEGRADED
+TOOL_LIMIT_EXCEEDED
+UNSAFE_DESTINATION
 ```
 
-## Security rules
+## Status codes
 
-- No stack traces or raw upstream bodies returned.
-- No middleware URL or credential in public config.
-- No arbitrary URL fetching.
-- No open redirect.
-- No secret values in logs.
-- No direct Odoo/n8n access.
-- No non-idempotent retry without stable idempotency.
+```text
+200 successful read/tool operation
+202 durable write acceptance
+400 malformed/idempotency-required
+403 origin/CSRF denied
+404 unknown public resource/token
+409 idempotency conflict
+410 expired public token when appropriate
+413 body too large
+422 validation error
+429 rate limited
+503 required configuration/dependency unavailable
+```
 
 ## Required tests
 
-- Request-ID propagation/generation.
-- Problem response schema.
-- Validation failures.
-- Origin/CSRF denial.
-- Body-size rejection.
-- Rate-limit response and retry metadata.
-- Idempotent duplicate and conflict.
-- Safe redirect allowlist.
-- Public config secret exclusion.
-- Health/readiness states.
-- Middleware mock acceptance, timeout, rejection and degraded behavior.
-- No stack trace/secret leakage.
-- API contract snapshot/validation.
-- Type check, lint, unit/integration tests and production build.
+### Common API
+
+- request-ID generation/propagation;
+- success/problem schemas;
+- validation and normalization;
+- origin/CSRF denial;
+- body/cost/rate limits and retry metadata;
+- idempotent duplicate/conflict/in-progress;
+- safe redirect allowlist;
+- public config secret exclusion;
+- health/readiness states;
+- no stack trace/secret/internal detail leakage.
+
+### Endpoint registry
+
+- every required endpoint exists;
+- unique operation IDs;
+- no unversioned public write endpoints;
+- every form maps to exactly one endpoint;
+- public/legal/consent/privacy/tool operations match shared contracts;
+- OpenAPI/manifest snapshot passes.
+
+### Middleware fixtures
+
+- durable acceptance;
+- duplicate acceptance;
+- timeout;
+- rejection;
+- malformed response;
+- circuit open/degraded;
+- false-success prevention.
+
+### Privacy/security
+
+- public status-token isolation/expiry fixture;
+- no privacy/free-text body in logs;
+- no arbitrary network call from tool fixtures;
+- public legal fixtures do not expose draft content as approved.
+
+### Quality
+
+- type check;
+- lint;
+- unit/integration/contract tests;
+- production build;
+- dependency audit;
+- secret scan.
 
 ## Git delivery
 
-Push only this branch, open/update one draft PR and post exact endpoint/contract coverage. Stop before forms or real integration work.
+Push only this branch, update draft PR #7 with exact endpoint and contract evidence, and stop before `feat/legal-privacy-cookie-center` or form UI work.
 
 ## Prohibited
 
-- No production middleware credential.
-- No browser form implementation beyond test fixtures.
-- No direct Odoo/n8n calls.
-- No Docker/Caddy/deployment changes.
+- no production middleware credential;
+- no final form/legal UI;
+- no direct Odoo/n8n/database access;
+- no external privacy deletion;
+- no real email/billing;
+- no Docker/Caddy/deployment;
+- no production change;
+- no invented endpoint success evidence.
