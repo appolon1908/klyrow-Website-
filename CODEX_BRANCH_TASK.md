@@ -1,21 +1,13 @@
-# Codex Branch Task — Shared Forms and Conversion Engine
+# Codex Branch Task — Legal, Privacy and Cookie Center
 
 ## Branch
 
-`feat/forms-conversion-engine`
+`feat/legal-privacy-cookie-center`
 
 ## Objective
 
-Build one schema-driven, bilingual and accessible public form engine on top of the reviewed `/api/v1` BFF. Commercial, support, security, abuse, privacy and update-subscription flows must share the same field, validation, attribution, idempotency and status behavior.
+Build the bilingual legal-document registry, legal hub, privacy/cookie utilities, one shared consent state, and public legal/privacy request surfaces on top of the reviewed BFF and form engine.
 
-## Required implementation
+## Release rule
 
-- Typed form registry and exact endpoint mapping.
-- Reusable field and form components.
-- Client convenience validation with authoritative server validation.
-- Contact normalization, consent separation and attribution capture.
-- Idempotency-key reuse for safe retries.
-- Honeypot, minimum-completion-time and optional CAPTCHA fields.
-- Accessible error summary, pending, accepted, duplicate, rate-limited and retryable states.
-- No false success before durable BFF acceptance.
-- No secrets, direct Odoo/n8n calls, Docker, Nginx, staging or production changes.
+All legal text remains `draft` and non-indexable until the operating-entity facts and counsel approval are recorded. This branch must not enable analytics, deploy infrastructure, mutate external records, or call Odoo/n8n directly.

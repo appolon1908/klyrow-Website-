@@ -1,11 +1,12 @@
 import { randomUUID } from 'node:crypto'
 import { ZodError } from 'zod'
 import type { Locale } from '@klyrow/contracts'
+import { createConsentPreferences, parseConsentPreferences } from '../../../legal/consent'
 import { ApiProblem, validationProblem } from '../../errors/api-problem'
 import { createRequestContext, createRequestId } from '../../observability/request-context'
 import { apiOperations } from '../../registry/api-operations'
 import { cookiePreferencesSchema, publicSubmissionSchema, toolInputSchema } from '../../schemas/public-submission'
-import { getPublicFeatures, getPublicLegalDocuments, getPublicNavigation, getPublicPricing } from '../../services/public-catalog-service'
+import { getPublicFeatures, getPublicLegalDocument, getPublicLegalDocuments, getPublicNavigation, getPublicPricing } from '../../services/public-catalog-service'
 import { submissionService } from '../../services/submission-service'
 import { apiSandboxFixture, domainReadinessFixture, migrationPlanFixture, pricingEstimate, searchPublicContent } from '../../services/tool-service'
 
@@ -32,16 +33,13 @@ const windows = new Map<string, { count: number; resetAt: number }>()
 const checkRate = (key: string, limit = 12) => {
   const now = Date.now()
   const current = windows.get(key)
-  if (!current || current.resetAt <= now) {
-    windows.set(key, { count: 1, resetAt: now + 60000 })
-    return
-  }
+  if (!current || current.resetAt <= now) { windows.set(key, { count: 1, resetAt: now + 60000 }); return }
   current.count += 1
   if (current.count > limit) throw new ApiProblem(429, 'RATE_LIMITED', 'Too many requests. Try again shortly.')
 }
-
 const success = <T>(requestId: string, data: T, status = 'ok') => ({ request_id: requestId, status, received_at: new Date().toISOString(), data })
 const parseLocale = (value: unknown): Locale => (value === 'es' ? 'es' : 'en')
+const cookieDefaults = () => createConsentPreferences({}, 'api')
 
 export default defineEventHandler(async (event) => {
   const requestId = createRequestId(getHeader(event, 'x-request-id'))
@@ -54,33 +52,27 @@ export default defineEventHandler(async (event) => {
 
   try {
     checkRate(`${getRequestIP(event, { xForwardedFor: true }) ?? 'unknown'}:${method}:${path}`)
-
     if (method === 'GET' && path === '/api/v1/health') return success(requestId, { status: 'healthy', release_sha: String(config.public.releaseSha) })
     if (method === 'GET' && path === '/api/v1/ready') return success(requestId, { status: 'ready', dependencies: { middleware: 'mocked' } })
     if (method === 'GET' && path === '/api/v1/public/config') {
       const csrfToken = `csrf_${randomUUID().replaceAll('-', '')}`
       setCookie(event, 'klyrow_csrf', csrfToken, { httpOnly: false, sameSite: 'strict', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 3600 })
-      return success(requestId, {
-        locales: ['en', 'es'],
-        sign_in_url: String(config.public.signInUrl || ''),
-        docs_url: String(config.public.docsUrl || ''),
-        status_url: String(config.public.statusUrl || ''),
-        scheduling_url: String(config.public.schedulingUrl || ''),
-        pricing_mode: String(config.public.pricingMode || 'contact_sales'),
-        csrf_token: csrfToken,
-      })
+      return success(requestId, { locales: ['en', 'es'], sign_in_url: String(config.public.signInUrl || ''), docs_url: String(config.public.docsUrl || ''), status_url: String(config.public.statusUrl || ''), scheduling_url: String(config.public.schedulingUrl || ''), pricing_mode: String(config.public.pricingMode || 'contact_sales'), csrf_token: csrfToken })
     }
     if (method === 'GET' && path === '/api/v1/public/navigation') return success(requestId, getPublicNavigation(locale))
     if (method === 'GET' && path === '/api/v1/public/features') return success(requestId, getPublicFeatures(locale))
     if (method === 'GET' && path === '/api/v1/public/pricing') return success(requestId, getPublicPricing(locale, String(config.public.pricingMode || 'contact_sales')))
-    if (method === 'GET' && path === '/api/v1/public/legal-documents') return success(requestId, getPublicLegalDocuments())
-    if (method === 'GET' && /^\/api\/v1\/public\/legal-documents\/[^/]+$/.test(path)) throw new ApiProblem(404, 'LEGAL_DOCUMENT_NOT_FOUND', 'The legal document is not published.')
+    if (method === 'GET' && path === '/api/v1/public/legal-documents') return success(requestId, getPublicLegalDocuments(locale))
+    if (method === 'GET' && /^\/api\/v1\/public\/legal-documents\/[^/]+$/.test(path)) {
+      const document = getPublicLegalDocument(locale, decodeURIComponent(path.split('/').at(-1) ?? ''))
+      if (!document) throw new ApiProblem(404, 'LEGAL_DOCUMENT_NOT_FOUND', 'The legal document is not published.')
+      return success(requestId, document)
+    }
     if (method === 'GET' && path === '/api/v1/consent/cookies/config') return success(requestId, { version: 'cookie-policy-v1', categories: ['necessary', 'preferences', 'analytics', 'marketing'], strict_mode: true })
-    if (method === 'GET' && path === '/api/v1/consent/cookies/current') return success(requestId, { necessary: true, preferences: false, analytics: false, marketing: false, version: 'cookie-policy-v1' })
+    if (method === 'GET' && path === '/api/v1/consent/cookies/current') return success(requestId, parseConsentPreferences(getCookie(event, 'klyrow_consent')) ?? cookieDefaults())
     if (method === 'GET' && /^\/api\/v1\/privacy\/requests\/[^/]+$/.test(path)) return success(requestId, { status: 'received', public_reference: path.split('/').at(-1)?.slice(0, 12) })
     if (method === 'GET' && path === '/api/v1/tools/content-search') return success(requestId, searchPublicContent(String(getQuery(event).q ?? ''), locale))
     if (method === 'GET' && path === '/api/v1/openapi') return success(requestId, { openapi: '3.1.0', info: { title: 'Klyrow Website BFF', version: String(config.public.releaseSha) }, operations: apiOperations })
-
     if (!['POST', 'PUT'].includes(method)) throw new ApiProblem(404, 'NOT_FOUND', 'No API operation matches this request.')
 
     const origin = getHeader(event, 'origin')
@@ -92,20 +84,22 @@ export default defineEventHandler(async (event) => {
     }
     const idempotencyKey = getHeader(event, 'idempotency-key')
     if (!idempotencyKey || idempotencyKey.length < 12 || idempotencyKey.length > 200) throw new ApiProblem(400, 'IDEMPOTENCY_REQUIRED', 'A valid Idempotency-Key header is required.')
-
     const raw = (await readRawBody(event, 'utf8')) ?? '{}'
     if (Buffer.byteLength(raw, 'utf8') > 65536) throw new ApiProblem(413, 'BODY_TOO_LARGE', 'The request body is too large.')
     let rawBody: Record<string, unknown>
-    try {
-      const parsed: unknown = JSON.parse(raw)
-      if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('object required')
-      rawBody = parsed as Record<string, unknown>
-    } catch {
-      throw new ApiProblem(400, 'MALFORMED_REQUEST', 'The request body must be valid JSON.')
-    }
+    try { const parsed: unknown = JSON.parse(raw); if (!parsed || typeof parsed !== 'object' || Array.isArray(parsed)) throw new Error('object required'); rawBody = parsed as Record<string, unknown> }
+    catch { throw new ApiProblem(400, 'MALFORMED_REQUEST', 'The request body must be valid JSON.') }
 
-    if (method === 'PUT' && path === '/api/v1/consent/cookies') return success(requestId, cookiePreferencesSchema.parse(rawBody), 'updated')
-    if (method === 'POST' && path === '/api/v1/consent/cookies/reset') return success(requestId, { necessary: true, preferences: false, analytics: false, marketing: false, version: 'cookie-policy-v1' }, 'reset')
+    if (method === 'PUT' && path === '/api/v1/consent/cookies') {
+      const parsed = cookiePreferencesSchema.parse(rawBody)
+      const next = createConsentPreferences(parsed, 'api')
+      setCookie(event, 'klyrow_consent', JSON.stringify(next), { httpOnly: false, sameSite: 'lax', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 31536000 })
+      return success(requestId, next, 'updated')
+    }
+    if (method === 'POST' && path === '/api/v1/consent/cookies/reset') {
+      deleteCookie(event, 'klyrow_consent', { path: '/' })
+      return success(requestId, cookieDefaults(), 'reset')
+    }
 
     const toolBody = toolInputSchema.parse(rawBody)
     if (method === 'POST' && path === '/api/v1/tools/pricing-estimate') return success(requestId, pricingEstimate(toolBody, String(config.public.pricingMode || 'contact_sales')))
@@ -124,11 +118,7 @@ export default defineEventHandler(async (event) => {
     setResponseStatus(event, 202)
     return { request_id: requestId, ...result }
   } catch (error: unknown) {
-    const problem = error instanceof ZodError
-      ? validationProblem(error.issues.map((issue) => ({ field: issue.path.join('.') || 'body', code: issue.code.toUpperCase() })))
-      : error instanceof ApiProblem
-        ? error
-        : new ApiProblem(500, 'INTERNAL_ERROR', 'The request could not be completed.')
+    const problem = error instanceof ZodError ? validationProblem(error.issues.map((issue) => ({ field: issue.path.join('.') || 'body', code: issue.code.toUpperCase() }))) : error instanceof ApiProblem ? error : new ApiProblem(500, 'INTERNAL_ERROR', 'The request could not be completed.')
     setResponseStatus(event, problem.status)
     setHeader(event, 'content-type', 'application/problem+json')
     return { type: problem.type, title: problem.code.replaceAll('_', ' '), status: problem.status, code: problem.code, detail: problem.message, request_id: requestId, ...(problem.fields ? { errors: problem.fields } : {}) }

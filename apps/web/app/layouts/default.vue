@@ -6,6 +6,7 @@
     <main id="main-content" tabindex="-1"><slot /></main>
     <SiteFooter />
     <EngagementPopup />
+    <CookieBanner />
     <ToastRegion />
   </div>
 </template>
