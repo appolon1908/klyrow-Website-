@@ -7,6 +7,7 @@ REPOSITORY_SSH="git@github.com:${REPOSITORY}.git"
 BLUEPRINT_BRANCH="planning/production-website-blueprint"
 WORKSPACE="${KLYROW_WEBSITE_CODEX_WORKSPACE:-/srv/codex-workspaces/klyrow-Website-}"
 TASK_FILE="CODEX_WEBSITE_PRODUCTION_TASK.md"
+OWNER_DIRECTIVE_FILE="OWNER_WEBSITE_PRODUCTION_DIRECTIVE.md"
 
 log() {
   printf '%s\n' "$*"
@@ -24,9 +25,7 @@ command -v codex >/dev/null 2>&1 || fail "codex_cli_not_installed"
 HOST_IPS="$(hostname -I 2>/dev/null || true)"
 case " ${HOST_IPS} " in
   *" 65.109.65.169 "*|*" 10.40.0.1 "*) ;;
-  *)
-    fail "not_expected_codestra_caddy_host HOSTNAME=$(hostname) HOST_IPS=${HOST_IPS:-unknown}"
-    ;;
+  *) fail "not_expected_codestra_caddy_host HOSTNAME=$(hostname) HOST_IPS=${HOST_IPS:-unknown}" ;;
 esac
 
 log "HOSTNAME=$(hostname)"
@@ -70,6 +69,7 @@ git show-ref --verify --quiet "refs/remotes/origin/$BLUEPRINT_BRANCH" || \
 git switch --detach "origin/$BLUEPRINT_BRANCH"
 
 [[ -f "$TASK_FILE" ]] || fail "task_file_missing TASK_FILE=$TASK_FILE"
+[[ -f "$OWNER_DIRECTIVE_FILE" ]] || fail "owner_directive_missing FILE=$OWNER_DIRECTIVE_FILE"
 
 BLUEPRINT_SHA="$(git rev-parse HEAD)"
 
@@ -79,10 +79,11 @@ log "BLUEPRINT_BRANCH=$BLUEPRINT_BRANCH"
 log "BLUEPRINT_SHA=$BLUEPRINT_SHA"
 log "GIT_STATUS=$(git status --short | tr '\n' ';')"
 log "TASK_FILE=$(pwd)/$TASK_FILE"
+log "OWNER_DIRECTIVE_FILE=$(pwd)/$OWNER_DIRECTIVE_FILE"
 log "PUBLIC_WEBSITE_PRODUCTION_AUTHORIZED_AFTER_GATES=YES"
 log "LIVE_EMAIL_OR_BILLING_CHANGES_AUTHORIZED=NO"
 
-TASK_CONTENT="$(cat "$TASK_FILE")"
+TASK_CONTENT="$(cat "$OWNER_DIRECTIVE_FILE"; printf '\n\n---\n\n'; cat "$TASK_FILE")"
 
 if codex --help 2>&1 | grep -qE '(^|[[:space:]])exec([[:space:]]|$)'; then
   exec codex exec "$TASK_CONTENT"
