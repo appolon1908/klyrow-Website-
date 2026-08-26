@@ -1,0 +1,39 @@
+{
+  "schema_version": 1,
+  "environment": "production",
+  "source_repository": "appolon1908-hue/klyrow-Website-",
+  "default_branch": "main",
+  "protected_environment": "production",
+  "allowed_runner_labels": ["self-hosted", "linux", "x64", "klyrow-provider"],
+  "allowed_image_prefix": "ghcr.io/appolon1908-hue/klyrow-website@sha256:",
+  "runtime_paths_must_be_verified": true,
+  "release_sha_must_equal_or_be_reachable_from_main": true,
+  "intent_commit_must_equal_current_main": true,
+  "immutable_image_digest_required": true,
+  "sbom_digest_required": true,
+  "staging_evidence_required": true,
+  "rollback_evidence_required": true,
+  "independent_review_required": true,
+  "minimum_reviewed_pull_requests": 14,
+  "allowed_release_root_prefix": "/srv/klyrow-website",
+  "allowed_nginx_root": "/etc/nginx",
+  "required_operator_path": "/usr/local/libexec/klyrow-website-gitops-operator",
+  "forbidden_ports": [22, 25, 80, 443, 2525, 2775, 3100, 8990, 1401, 18000, 18001, 18002, 18003, 18080, 18082, 18443],
+  "protected_hostnames": [
+    "app.klyrow.com",
+    "api.klyrow.com",
+    "track.klyrow.com",
+    "bounce.klyrow.com"
+  ],
+  "forbidden_scopes": [
+    "postal_or_smtp_mutation",
+    "live_email_activation",
+    "real_billing",
+    "odoo_accounting_mutation",
+    "unrestricted_n8n_activation",
+    "keycloak_mutation",
+    "kyqra_mutation",
+    "dns_mutation",
+    "full_stack_restart"
+  ]
+}
