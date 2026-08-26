@@ -1,4 +1,4 @@
-# Codex Branch Task — Klyrow Website Production V1
+# Codex Branch Task — Klyrow Website Production V1 on Provider Host
 
 ## Branch
 
@@ -8,131 +8,142 @@ release/website-production-v1
 
 ## Prerequisites
 
-Do not implement or deploy from this branch until every selected feature, performance, Docker and Caddy PR is independently reviewed and merged into the exact release candidate.
+Do not implement or deploy until every selected feature, performance, Docker and `ops/provider-host-nginx-edge` PR is independently reviewed and merged into the exact release candidate.
+
+`ops/caddy-edge` is superseded and is not a release prerequisite.
+
+## Production target
+
+```text
+Host: 37.27.128.39
+Private IP: 10.40.0.4
+Edge: existing Nginx + Certbot
+Website upstream: 127.0.0.1:18110 after free-port verification
+Staging upstream: 127.0.0.1:18111 after free-port verification
+```
+
+Read `CODEX_PROVIDER_HOST_DEPLOYMENT_TASK.md` and `docs/PROVIDER_HOST_NGINX_DEPLOYMENT.md` completely. Their deployment rules override older Caddy/host/port instructions.
 
 ## Objective
 
-Integrate the reviewed Klyrow public website, certify it in staging, deploy the public website to production, verify it, and retain a proven rollback path.
+Integrate the reviewed Klyrow public website, certify it on the provider host in staging, switch only apex/`www` website traffic through existing Nginx, verify production, and retain a proven rollback path.
 
-This authorization applies only to the public website. It does not authorize live email delivery, Postal changes, real billing, Odoo accounting mutations, unrestricted n8n activation, Keycloak changes or unrelated infrastructure changes.
+This authorization applies only to the public website. It does not authorize live email changes, Postal/SMTP changes, real billing, Odoo accounting mutation, unrestricted n8n activation, Keycloak changes, Kyqra changes or unrelated infrastructure changes.
 
 ## Mandatory release inputs
 
 Record:
 
-- exact release commit SHA;
+- exact release SHA and immutable image digest;
+- SBOM, scans, provenance and checksums;
+- exact reviewed PR heads;
+- migration statement;
+- configuration inventory without secret values;
+- provider-host listener/service/container inventory;
+- complete current Nginx config and checksum-verified backup;
+- certificate names/expiry without private material;
+- current behavior of apex, `www`, `app`, `api`, `track` and `bounce`;
+- local health of Klyrow gateway, Postal, SMTP, Mautic, Grafana and Kyqra;
+- previous website release and rollback target;
+- host resource headroom.
+
+## Application certification
+
+- type check, lint, unit/component/integration/contract tests;
+- Nuxt production build and prerender;
+- exact localized marketing/legal route counts;
+- CTA/form/API/legal/cookie registry checks;
+- idempotency/problem/security tests;
+- interactive-tool no-side-effect tests;
+- legal approval state and noindex/index rules.
+
+## Browser and quality certification
+
+- mobile/tablet/laptop/wide-desktop Playwright;
+- axe and manual keyboard/WCAG 2.2 AA;
+- Lighthouse and bundle/image/font budgets;
+- broken links, canonical, hreflang, sitemap, robots and structured data;
+- cookie preference and analytics network behavior.
+
+## Integration certification
+
+- durable middleware acceptance for each form type in approved test/staging mode;
+- duplicate/idempotency, rejection and timeout behavior;
+- approved Odoo CRM/helpdesk/privacy-case mappings;
+- approved non-authoritative n8n routing/notification results;
+- no real invoice, payment, entitlement, live email or production billing action.
+
+## Container and provider-host edge certification
+
 - immutable image digest;
-- SBOM and scan artifacts;
-- source and image checksums;
-- reviewed PR list and exact heads;
-- migration statement (`none` if no website persistence migration);
-- environment/configuration inventory without values;
-- current production Caddy/container/release state;
-- previous known-good release and rollback target.
+- non-root/read-only/capability-free runtime;
+- loopback-only staging/production ports;
+- health/readiness, SIGTERM and restart recovery;
+- image scan and SBOM;
+- staging deployment and rollback rehearsal;
+- preferred ports proven free or approved alternatives recorded;
+- complete Nginx backup and full config validation;
+- DNS and ports 80/443;
+- TLS, cache, compression, security and body-limit headers;
+- `app` and `api` unchanged;
+- `track` and `bounce` unchanged;
+- Klyrow gateway, Postal, SMTP, Mautic, Grafana and Kyqra healthy before and after;
+- resource headroom and soak monitoring.
 
-## Required certification
+## Production algorithm
 
-### Application
+1. Confirm exact reviewed release and explicit owner GO.
+2. Verify provider-host identity and isolated website release workspace.
+3. Verify required secret files without printing values.
+4. Audit listeners and prove the website port is free.
+5. Capture current Nginx, certificate, container, hostname and protected-service evidence.
+6. Back up the complete Nginx configuration with checksums.
+7. Pull the exact immutable image digest.
+8. Start the website candidate on loopback.
+9. Run local health/readiness, routes, assets and form-safe smoke tests.
+10. Validate the complete host-specific Nginx candidate.
+11. Reverify app/api/track/bounce and all protected services.
+12. Install only the reviewed apex/`www` website host split.
+13. Run full Nginx validation.
+14. Gracefully reload Nginx only.
+15. Run external apex, `www`, TLS, route, asset, API-health and durable-form tests.
+16. Monitor website and existing Klyrow services during soak.
+17. Mark the website release current only after success.
+18. Preserve the previous website release, Nginx backup and evidence.
 
-- Type check, lint, unit/component/integration tests.
-- Nuxt production build and prerender.
-- Exact route count: 46 English and 46 Spanish indexable pages.
-- Localized route equivalence.
-- CTA registry validation.
-- Form registry and endpoint validation.
-- API contract/problem/idempotency/security tests.
-- Interactive-tool no-side-effect tests.
+## Stop and rollback conditions
 
-### Browser and quality
+- chosen port is occupied;
+- Nginx validation fails;
+- health/readiness or durable forms fail;
+- apex/`www`/TLS regression;
+- app/api/track/bounce regression;
+- Klyrow, Postal, SMTP, Mautic, Grafana or Kyqra degradation;
+- material 5xx, latency, memory, CPU, disk or log regression;
+- missing secret, certificate, DNS, approved integration, artifact, review or rollback evidence.
 
-- Mobile/tablet/laptop/wide-desktop Playwright matrix.
-- axe accessibility with no serious/critical violations.
-- WCAG 2.2 AA manual keyboard checks.
-- Lighthouse CI and exact scores.
-- Bundle/image/font budgets.
-- Broken-link, canonical, hreflang, sitemap, robots and structured-data checks.
-- Consent/analytics network verification.
-
-### Integrations
-
-- Durable middleware acceptance for each form type in approved test/staging mode.
-- Duplicate/idempotency test.
-- Middleware rejection/timeout behavior.
-- Odoo approved test-mode contact/lead/activity/support mappings.
-- n8n approved test-mode notification/routing results.
-- No real invoice, payment, product entitlement or live email action.
-
-### Container and edge
-
-- Immutable image digest.
-- Non-root/read-only runtime checks.
-- Health/readiness.
-- SIGTERM and restart recovery.
-- Image scan and SBOM.
-- Staging deployment and rollback rehearsal.
-- Complete Caddy backup.
-- Caddy fmt/validate.
-- DNS for apex and `www`.
-- Ports 80/443 reachability.
-- TLS issuance/readiness.
-- Cache, compression, security and body-limit headers.
-- Unrelated site health before/after.
-
-## Production deployment algorithm
-
-1. Confirm all gates and exact release authorization.
-2. Confirm host identity and isolated release workspace.
-3. Confirm required secrets/configuration exist without printing values.
-4. Confirm DNS and Caddy ownership.
-5. Capture current production evidence and backup Caddy.
-6. Pull exact immutable image digest.
-7. Start candidate on isolated upstream.
-8. Run local health/readiness and route/form-safe smoke tests.
-9. Validate complete Caddy configuration.
-10. Switch only the Klyrow upstream/site fragment.
-11. Reload Caddy only.
-12. Run external apex, `www`, TLS, route, asset, API health and form tests.
-13. Monitor logs, health, latency and resource usage during soak.
-14. Mark current release only after success.
-15. Preserve previous release and evidence.
-
-## Automatic stop/rollback conditions
-
-- Health/readiness failure.
-- Broken home, pricing, localized routes or form endpoints.
-- Elevated 5xx rate.
-- Durable middleware form failure.
-- TLS/Caddy failure.
-- Severe rendering/accessibility regression.
-- Resource saturation caused by candidate.
-- Unrelated site/service regression.
-- Missing required secret, DNS, Odoo/n8n approval or exact artifact.
-
-On a stop condition, execute the rehearsed rollback and verify the previous site state. Do not improvise destructive remediation.
+Rollback restores the checksum-verified prior Nginx config and prior website release, validates Nginx, gracefully reloads Nginx only, and verifies every protected hostname/service. Do not restart the Docker daemon or provider stack.
 
 ## Required final report
 
 Provide:
 
-1. host, IPs and directories;
-2. release SHA, image digest, checksums and SBOM;
-3. reviewed PRs and commits;
-4. exact routes/locales/sitemaps;
-5. CTA/form/API registry results;
-6. type/lint/test/build results;
-7. browser/accessibility/Lighthouse/bundle results;
-8. SEO/link/structured-data results;
-9. middleware durability evidence;
-10. Odoo/n8n approved test evidence;
-11. image/container/security/secret-scan results;
-12. staging and rollback evidence;
-13. Caddy backup/validate/reload results;
-14. DNS/TLS/HTTP/header evidence;
-15. production smoke and soak results;
-16. analytics/consent verification;
-17. exact rollback command and current rollback target;
-18. known limitations and follow-ups;
-19. confirmation that unrelated services remained healthy;
-20. confirmation that live email delivery, Postal, real billing and Odoo accounting were unchanged.
+1. host, IPs, listener inventory and directories;
+2. release SHA, digest, checksums, scans and SBOM;
+3. reviewed PRs and heads;
+4. routes/locales/sitemaps/legal states;
+5. CTA/form/API/cookie registry results;
+6. type/lint/test/build/browser/accessibility/Lighthouse results;
+7. middleware/Odoo/n8n approved test evidence;
+8. container security and staging rollback evidence;
+9. Nginx backup, diff, validation and reload evidence;
+10. DNS/TLS/HTTP/cache/header evidence;
+11. app/api/track/bounce unchanged evidence;
+12. Klyrow/Postal/SMTP/Mautic/Grafana/Kyqra health evidence;
+13. resource/soak evidence;
+14. exact rollback command and target;
+15. blockers/limitations;
+16. confirmation that Caddy was not installed or activated;
+17. confirmation that live email, Postal, SMTP, billing, Odoo accounting and unrelated services were unchanged.
 
-Do not claim completion if any gate is missing, bypassed or unmeasured.
+Do not claim completion if any gate is missing or unmeasured.
