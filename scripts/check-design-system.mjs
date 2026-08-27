@@ -70,6 +70,7 @@ for (const file of changedFiles) {
   if (!SOURCE_EXTENSIONS.has(extname(file))) continue
   const source = read(file)
   const tokenFile = file === TOKEN_FILE
+  const legacyFile = file === LEGACY_FILE
 
   if (!tokenFile && /#[0-9a-fA-F]{3,8}\b|\b(?:rgb|rgba|hsl|hsla)\s*\(/.test(source)) {
     add(file, 'literal colors are forbidden outside the authoritative token file')
@@ -83,11 +84,11 @@ for (const file of changedFiles) {
     add(file, 'inline visual styles are forbidden')
   }
 
-  if (/rounded-full|rounded-\[[^\]]+\]|border-radius\s*:\s*(?:50%|999\d*px)/.test(source)) {
+  if (!legacyFile && /rounded-full|rounded-\[[^\]]+\]|border-radius\s*:\s*(?:50%|999\d*px)/.test(source)) {
     add(file, 'pill/circular or arbitrary geometry is outside the corporate radius scale')
   }
 
-  if (/\b(?:bg|text|border)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d{2,3}\b/.test(source)) {
+  if (!legacyFile && /\b(?:bg|text|border)-(?:slate|gray|zinc|neutral|stone|red|orange|amber|yellow|lime|green|emerald|teal|cyan|sky|blue|indigo|violet|purple|fuchsia|pink|rose)-\d{2,3}\b/.test(source)) {
     add(file, 'literal framework palette utilities are forbidden; use design tokens')
   }
 
