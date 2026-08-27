@@ -2,7 +2,12 @@ name: PR checks
 on:
   pull_request:
   push:
-    branches: [refactor/modular-website-architecture]
+    branches:
+      - main
+      - 'feat/**'
+      - 'refactor/**'
+      - 'perf/**'
+      - 'release/**'
 permissions:
   contents: read
 jobs:
@@ -10,6 +15,9 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          persist-credentials: false
       - uses: actions/setup-node@v4
         with:
           node-version: 22
@@ -17,6 +25,11 @@ jobs:
       - run: pnpm install --frozen-lockfile
       - run: pnpm typecheck
       - run: pnpm lint
+      - name: Enforce Klyrow design system
+        run: pnpm test:design
+        env:
+          DESIGN_BASE_SHA: ${{ github.event.pull_request.base.sha || github.event.before }}
+          DESIGN_HEAD_SHA: ${{ github.event.pull_request.head.sha || github.sha }}
       - run: pnpm test
       - run: pnpm build
       - run: pnpm unused

@@ -9,8 +9,8 @@ export default defineNuxtConfig({
       titleTemplate: '%s · Klyrow',
       meta: [
         { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'theme-color', content: '#5b4df7' },
-        { name: 'color-scheme', content: 'light dark' },
+        { name: 'theme-color', content: '#080808' },
+        { name: 'color-scheme', content: 'dark' },
       ],
       link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
     },

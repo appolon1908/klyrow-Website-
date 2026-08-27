@@ -10,15 +10,26 @@
             <AppCta :definition="primaryCta" label="Start building" />
             <AppCta :definition="secondaryCta" label="Request a demo" />
           </div>
+          <div class="hero-proof" aria-label="Platform principles">
+            <span>Policy aware</span><span>API first</span><span>Audit ready</span>
+          </div>
         </div>
-        <div class="product-orbit glass" aria-label="Klyrow platform architecture illustration">
-          <div class="orbit-core">K</div>
-          <span class="orbit-node orbit-node--one">API</span><span class="orbit-node orbit-node--two">Postal</span><span class="orbit-node orbit-node--three">Odoo</span><span class="orbit-node orbit-node--four">n8n</span>
+
+        <div class="system-panel" aria-label="Klyrow platform architecture illustration">
+          <div class="system-panel__header"><span>Klyrow control plane</span><span>Governed delivery</span></div>
+          <div class="system-panel__body">
+            <div v-for="item in systemFlow" :key="item.name" class="system-row">
+              <span class="system-row__status" aria-hidden="true"></span>
+              <div><strong>{{ item.name }}</strong><small>{{ item.detail }}</small></div>
+              <span>{{ item.state }}</span>
+            </div>
+          </div>
+          <div class="system-panel__footer">Intent → policy → delivery → business record</div>
         </div>
       </div>
     </section>
 
-    <section class="section">
+    <section class="section capability-section">
       <div class="container stack">
         <span class="eyebrow">A clearer operating model</span>
         <h2>Build, send and prove what happened.</h2>
@@ -30,9 +41,9 @@
       </div>
     </section>
 
-    <section class="section inverse">
+    <section class="section inverse story-section">
       <div class="container story-grid">
-        <div class="stack"><span class="eyebrow story-eyebrow">Designed for trust</span><h2>One timeline from intent to business outcome.</h2><p class="lede story-lede">Follow the identity, policy, message, provider result, automation and CRM record without exposing credentials or private infrastructure.</p></div>
+        <div class="stack"><span class="eyebrow">Designed for trust</span><h2>One timeline from intent to business outcome.</h2><p class="lede">Follow the identity, policy, message, provider result, automation and CRM record without exposing credentials or private infrastructure.</p></div>
         <ol class="timeline">
           <li v-for="(step, index) in steps" :key="step"><span>{{ index + 1 }}</span>{{ step }}</li>
         </ol>
@@ -40,7 +51,7 @@
     </section>
 
     <section class="section">
-      <div class="container final-cta glass">
+      <div class="container final-cta">
         <div class="stack"><span class="eyebrow">Ready when your team is</span><h2>Start with the architecture. Grow into the full platform.</h2></div>
         <BaseButton to="/demo">Request a demo</BaseButton>
       </div>
@@ -55,6 +66,12 @@ useSeoMeta({ title: 'Governed email infrastructure', description: 'Klyrow brings
 
 const primaryCta: CtaDefinition = { id: 'hero-start-building', labelKey: 'start', kind: 'route', target: '/developers', analyticsEvent: 'cta_click', variant: 'primary' }
 const secondaryCta: CtaDefinition = { id: 'hero-request-demo', labelKey: 'demo', kind: 'route', target: '/demo', analyticsEvent: 'cta_click', variant: 'secondary' }
+const systemFlow = [
+  { name: 'API gateway', detail: 'Authenticated intent', state: 'Ready' },
+  { name: 'Policy engine', detail: 'Consent and quota', state: 'Checked' },
+  { name: 'Delivery', detail: 'Approved provider route', state: 'Scoped' },
+  { name: 'Business record', detail: 'Middleware and CRM evidence', state: 'Durable' },
+]
 const capabilities = [
   { kicker: 'Send', title: 'Transactional and marketing streams', copy: 'Keep operational and marketing traffic clear, scoped and measurable.' },
   { kicker: 'Govern', title: 'Consent and decision evidence', copy: 'Record the policy and context that permitted or blocked each communication.' },
@@ -64,19 +81,34 @@ const steps = ['A customer or system creates an intent', 'Klyrow evaluates conse
 </script>
 
 <style scoped>
-.hero { overflow: hidden; }
-.hero-grid { display: grid; min-height: min(45rem, calc(100vh - 4.7rem)); align-items: center; gap: 4rem; grid-template-columns: minmax(0, 1.25fr) minmax(18rem, .75fr); }
+.hero { overflow: hidden; border-bottom: 1px solid var(--border-subtle); }
+.hero-grid { display: grid; min-height: calc(100svh - var(--header-height)); align-items: center; gap: clamp(3rem, 8vw, 7rem); grid-template-columns: minmax(0, 1.12fr) minmax(22rem, .88fr); }
 .hero-copy { position: relative; z-index: 2; }
-.product-orbit { position: relative; min-height: 30rem; border-radius: 50% 42% 48% 38%; background: linear-gradient(145deg, rgb(255 255 255 / 78%), rgb(235 232 255 / 72%)); }
-.orbit-core { position: absolute; inset: 50% auto auto 50%; display: grid; width: 7rem; height: 7rem; place-items: center; border-radius: 2rem; color: #fff; background: linear-gradient(145deg, var(--brand-primary), var(--accent-cyan)); box-shadow: var(--shadow-lg); font-size: 3rem; font-weight: 900; transform: translate(-50%, -50%); }
-.orbit-node { position: absolute; padding: .65rem .9rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-pill); background: #fff; box-shadow: var(--shadow-md); font-weight: 800; }
-.orbit-node--one { top: 14%; left: 14%; }.orbit-node--two { top: 18%; right: 7%; }.orbit-node--three { right: 11%; bottom: 16%; }.orbit-node--four { bottom: 12%; left: 16%; }
+.hero-copy h1 { max-width: 12ch; }
+.hero-proof { display: flex; flex-wrap: wrap; gap: .75rem 1.5rem; padding-top: .5rem; color: var(--text-muted); font-size: .72rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.hero-proof span { display: inline-flex; align-items: center; gap: .45rem; }
+.hero-proof span::before { width: .4rem; height: .4rem; background: var(--brand-primary); content: ''; }
+.system-panel { border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--surface-deep); box-shadow: var(--shadow-lg); }
+.system-panel__header,
+.system-panel__footer { display: flex; min-height: 3.25rem; padding: .85rem 1rem; align-items: center; justify-content: space-between; gap: 1rem; color: var(--text-muted); font-size: .68rem; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
+.system-panel__header { border-bottom: 1px solid var(--border-subtle); }
+.system-panel__header span:first-child { color: var(--brand-primary); }
+.system-panel__footer { border-top: 1px solid var(--border-subtle); }
+.system-panel__body { display: grid; }
+.system-row { display: grid; min-height: 5rem; padding: 1rem; align-items: center; gap: .8rem; grid-template-columns: auto 1fr auto; border-bottom: 1px solid var(--border-subtle); }
+.system-row:last-child { border-bottom: 0; }
+.system-row__status { width: .55rem; height: .55rem; border-radius: var(--radius-xs); background: var(--brand-primary); box-shadow: 0 0 0 4px var(--accent-soft); }
+.system-row div { display: grid; gap: .15rem; }
+.system-row strong { font-size: .86rem; }
+.system-row small { color: var(--text-muted); }
+.system-row > span:last-child { color: var(--text-secondary); font-size: .68rem; font-weight: 800; letter-spacing: .06em; text-transform: uppercase; }
+.capability-section { background: var(--surface-deep); }
+.story-section { border-block: 1px solid var(--border-subtle); }
 .story-grid { display: grid; gap: 4rem; grid-template-columns: 1fr 1fr; align-items: center; }
-.story-eyebrow { color: var(--accent-cyan); }.story-lede { color: #bfc2da; }
-.timeline { display: grid; gap: 1rem; padding: 0; list-style: none; }
-.timeline li { display: grid; padding: 1rem; align-items: center; gap: 1rem; grid-template-columns: auto 1fr; border: 1px solid rgb(255 255 255 / 12%); border-radius: var(--radius-md); background: rgb(255 255 255 / 5%); }
-.timeline span { display: grid; width: 2.2rem; height: 2.2rem; place-items: center; border-radius: 50%; color: #111326; background: var(--accent-lime); font-weight: 900; }
-.final-cta { display: flex; padding: clamp(2rem, 5vw, 4rem); align-items: center; justify-content: space-between; gap: 2rem; border-radius: 2rem; }
+.timeline { display: grid; gap: .75rem; padding: 0; list-style: none; }
+.timeline li { display: grid; padding: 1rem; align-items: center; gap: 1rem; grid-template-columns: auto 1fr; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); background: var(--surface-elevated); }
+.timeline span { display: grid; width: 2.25rem; height: 2.25rem; place-items: center; border: 1px solid var(--brand-primary); border-radius: var(--radius-xs); color: var(--brand-primary); font-weight: 900; }
+.final-cta { display: flex; padding: clamp(2rem, 5vw, 4rem); align-items: end; justify-content: space-between; gap: 2rem; border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--surface-elevated); }
 .final-cta h2 { max-width: 44rem; font-size: clamp(2rem, 4vw, 3.5rem); }
-@media (max-width: 54rem) { .hero-grid, .story-grid { grid-template-columns: 1fr; } .product-orbit { min-height: 22rem; } .final-cta { align-items: flex-start; flex-direction: column; } }
+@media (max-width: 54rem) { .hero-grid, .story-grid { grid-template-columns: 1fr; } .hero-grid { min-height: auto; } .system-panel { min-height: auto; } .final-cta { align-items: flex-start; flex-direction: column; } }
 </style>

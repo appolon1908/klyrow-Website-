@@ -19,7 +19,7 @@ const icon = computed(() => ({ info: '●', success: '✓', warning: '!', danger
 
 <style scoped>
 .status { display: grid; grid-template-columns: auto 1fr; gap: 1rem; align-items: start; }
-.status__icon { display: grid; width: 2.3rem; height: 2.3rem; place-items: center; border-radius: 50%; color: #fff; background: var(--brand-primary); font-weight: 900; }
+.status__icon { display: grid; width: 2.3rem; height: 2.3rem; place-items: center; border-radius: var(--radius-sm); color: var(--text-on-accent); background: var(--brand-primary); font-weight: 900; }
 .status[data-tone="success"] .status__icon { background: var(--success); }
 .status[data-tone="warning"] .status__icon { background: var(--warning); }
 .status[data-tone="danger"] .status__icon { background: var(--danger); }

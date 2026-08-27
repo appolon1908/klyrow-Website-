@@ -1,0 +1,7 @@
+# Corporate visual system and public shell require owner review.
+/apps/web/app/assets/css/ @appolon1908-hue
+/apps/web/app/components/base/ @appolon1908-hue
+/apps/web/app/components/navigation/ @appolon1908-hue
+/apps/web/app/layouts/ @appolon1908-hue
+/scripts/check-design-system.mjs @appolon1908-hue
+/docs/design-system*.md @appolon1908-hue

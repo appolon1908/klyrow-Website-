@@ -1,5 +1,5 @@
 <template>
-  <div class="site-frame">
+  <div class="site-frame marketing-route">
     <a class="skip-link" href="#main-content">{{ t('skip') }}</a>
     <SiteHeader />
     <main id="main-content" tabindex="-1">

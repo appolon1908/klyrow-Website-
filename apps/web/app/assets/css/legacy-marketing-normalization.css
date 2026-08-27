@@ -1,0 +1,22 @@
+@layer utilities {
+  /*
+   * Transitional compatibility only for older parallel marketing branches.
+   * New pages must use the shared tokens and components instead of relying on
+   * these selectors. Remove a selector when its last legacy consumer is gone.
+   */
+  .marketing-route :where(.rounded-full, .rounded-2xl, .rounded-3xl) {
+    border-radius: var(--radius-sm) !important;
+  }
+
+  .marketing-route :where(.bg-white, .bg-gray-50, .bg-slate-50) {
+    background: var(--surface-elevated) !important;
+  }
+
+  .marketing-route :where(.text-black, .text-gray-950, .text-slate-950) {
+    color: var(--text-primary) !important;
+  }
+
+  .marketing-route :where(.text-gray-500, .text-gray-600, .text-slate-500, .text-slate-600) {
+    color: var(--text-secondary) !important;
+  }
+}

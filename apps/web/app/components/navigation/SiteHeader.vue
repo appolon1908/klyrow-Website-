@@ -8,7 +8,7 @@
       <nav class="desktop-nav" aria-label="Primary navigation">
         <details v-for="group in navigationGroups" :key="group.id" class="nav-group">
           <summary>{{ t(group.labelKey) }}</summary>
-          <div class="mega-menu glass">
+          <div class="mega-menu">
             <NuxtLink v-for="item in group.items" :key="item.path" :to="localizePath(item.path)" class="mega-link">
               <strong>{{ item.label }}</strong><span v-if="item.description">{{ item.description }}</span>
             </NuxtLink>
@@ -91,30 +91,32 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.site-header { position: sticky; z-index: 50; top: 0; border-bottom: 1px solid rgb(223 226 244 / 70%); background: rgb(251 251 255 / 84%); backdrop-filter: blur(18px); }
-.header-inner { display: flex; min-height: 4.7rem; align-items: center; gap: 1.5rem; }
-.brand { display: inline-flex; gap: .65rem; align-items: center; font-size: 1.15rem; font-weight: 850; letter-spacing: -.03em; text-decoration: none; }
-.brand__mark { display: grid; width: 2.2rem; height: 2.2rem; place-items: center; border-radius: .75rem; color: #fff; background: linear-gradient(145deg, var(--brand-primary), var(--accent-cyan)); box-shadow: 0 8px 20px rgb(91 77 247 / 28%); }
-.desktop-nav { display: flex; flex: 1; align-items: center; gap: .3rem; }
+.site-header { position: fixed; z-index: 50; inset: 0 0 auto; height: var(--header-height); border-bottom: 1px solid var(--border-subtle); background: var(--surface-primary); }
+.header-inner { display: flex; height: 100%; align-items: center; gap: 1.5rem; }
+.brand { display: inline-flex; flex: 0 0 auto; gap: .7rem; align-items: center; color: var(--text-primary); font-size: 1.08rem; font-weight: 800; letter-spacing: -.02em; text-decoration: none; }
+.brand__mark { display: grid; width: 2.1rem; height: 2.1rem; place-items: center; border: 1px solid var(--brand-primary); border-radius: var(--radius-xs); color: var(--surface-deep); background: var(--brand-primary); font-size: .9rem; font-weight: 900; }
+.desktop-nav { display: flex; flex: 1; align-items: center; justify-content: center; gap: .15rem; }
 .nav-link,
-.nav-group summary { padding: .7rem .7rem; border-radius: var(--radius-sm); color: var(--text-secondary); font-size: .92rem; font-weight: 720; text-decoration: none; cursor: pointer; list-style: none; }
+.nav-group summary { min-height: 44px; padding: .9rem .65rem; border-radius: var(--radius-xs); color: var(--text-secondary); font-size: .71rem; font-weight: 800; letter-spacing: .08em; text-decoration: none; text-transform: uppercase; cursor: pointer; list-style: none; }
 .nav-link:hover,
-.nav-group summary:hover { color: var(--text-primary); background: var(--surface-secondary); }
+.nav-group summary:hover { color: var(--text-primary); background: var(--surface-raised); }
 .nav-group { position: relative; }
 .nav-group summary::-webkit-details-marker { display: none; }
-.mega-menu { position: absolute; top: calc(100% + .7rem); left: 0; display: grid; width: min(38rem, 80vw); padding: .8rem; grid-template-columns: repeat(2, minmax(0, 1fr)); border-radius: var(--radius-lg); }
-.mega-link { display: grid; gap: .2rem; padding: 1rem; border-radius: var(--radius-md); text-decoration: none; }
-.mega-link:hover { background: var(--surface-secondary); }
-.mega-link span { color: var(--text-secondary); font-size: .84rem; }
-.header-actions { display: flex; align-items: center; gap: .85rem; }
-.menu-button { display: none; width: 2.8rem; height: 2.8rem; border: 1px solid var(--border-subtle); border-radius: 50%; background: var(--surface-elevated); font-size: 1.4rem; cursor: pointer; }
-.mobile-backdrop { position: fixed; z-index: 70; inset: 0; background: rgb(10 12 32 / 58%); }
-.mobile-panel { position: absolute; inset: 0 0 0 auto; display: grid; align-content: start; width: min(92vw, 26rem); padding: 1rem 1.25rem 2rem; overflow: auto; background: var(--surface-elevated); box-shadow: var(--shadow-lg); }
-.mobile-panel__top { display: flex; min-height: 3.4rem; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); }
-.mobile-panel__top button { border: 0; background: transparent; font-size: 2rem; cursor: pointer; }
-.mobile-group { display: grid; gap: .4rem; padding-block: 1rem; border-bottom: 1px solid var(--border-subtle); }
-.mobile-group h2 { font-size: 1rem; }
-.mobile-panel a:not(.button) { padding: .65rem 0; text-decoration: none; }
+.mega-menu { position: absolute; top: calc(100% + .65rem); left: 50%; display: grid; width: min(42rem, 82vw); padding: .7rem; grid-template-columns: repeat(2, minmax(0, 1fr)); border: 1px solid var(--border-subtle); border-radius: var(--radius-md); background: var(--surface-elevated); box-shadow: var(--shadow-lg); transform: translateX(-50%); }
+.mega-link { display: grid; gap: .2rem; padding: 1rem; border-radius: var(--radius-sm); text-decoration: none; }
+.mega-link:hover { background: var(--surface-raised); }
+.mega-link strong { font-size: .84rem; }
+.mega-link span { color: var(--text-muted); font-size: .8rem; }
+.header-actions { display: flex; flex: 0 0 auto; align-items: center; gap: .65rem; }
+.menu-button { display: none; width: 44px; height: 44px; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: var(--text-primary); background: var(--surface-control); font-size: 1.25rem; cursor: pointer; }
+.menu-button:hover { border-color: var(--brand-primary); }
+.mobile-backdrop { position: fixed; z-index: 70; inset: 0; background: var(--overlay); }
+.mobile-panel { position: absolute; inset: 0 0 0 auto; display: grid; align-content: start; width: min(92vw, 28rem); padding: 1rem 1.25rem 2rem; overflow: auto; border-left: 1px solid var(--border-subtle); background: var(--surface-deep); box-shadow: var(--shadow-lg); }
+.mobile-panel__top { display: flex; min-height: 3.6rem; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--border-subtle); }
+.mobile-panel__top button { width: 44px; height: 44px; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: var(--text-primary); background: var(--surface-raised); font-size: 1.5rem; cursor: pointer; }
+.mobile-group { display: grid; gap: .35rem; padding-block: 1rem; border-bottom: 1px solid var(--border-subtle); }
+.mobile-group h2 { color: var(--brand-primary); font-size: .72rem; letter-spacing: .09em; text-transform: uppercase; }
+.mobile-panel a:not(.button) { min-height: 44px; padding: .65rem 0; color: var(--text-secondary); text-decoration: none; }
 @media (max-width: 68rem) {
   .desktop-nav,
   .desktop-cta,

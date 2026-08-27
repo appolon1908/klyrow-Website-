@@ -7,7 +7,7 @@
 const props = withDefaults(
   defineProps<{
     to?: string
-    variant?: 'primary' | 'secondary' | 'text'
+    variant?: 'primary' | 'secondary' | 'quiet' | 'text' | 'link' | 'danger'
     type?: 'button' | 'submit' | 'reset'
     disabled?: boolean
   }>(),

@@ -61,9 +61,10 @@ onBeforeUnmount(() => {
 </script>
 
 <style scoped>
-.backdrop { position: fixed; z-index: 80; inset: 0; display: grid; place-items: center; padding: 1rem; background: rgb(10 12 32 / 66%); }
+.backdrop { position: fixed; z-index: 80; inset: 0; display: grid; place-items: center; padding: 1rem; background: var(--overlay); }
 .dialog { width: min(100%, 38rem); max-height: min(90vh, 50rem); overflow: auto; box-shadow: var(--shadow-lg); }
 .dialog__header { display: flex; gap: 1rem; align-items: center; justify-content: space-between; }
 .dialog__header h2 { font-size: 1.7rem; }
-.dialog__close { width: 2.5rem; height: 2.5rem; border: 0; border-radius: 50%; background: var(--surface-secondary); font-size: 1.6rem; cursor: pointer; }
+.dialog__close { width: 44px; height: 44px; border: 1px solid var(--border-subtle); border-radius: var(--radius-sm); color: var(--text-primary); background: var(--surface-raised); font-size: 1.5rem; cursor: pointer; }
+.dialog__close:hover { border-color: var(--brand-primary); }
 </style>

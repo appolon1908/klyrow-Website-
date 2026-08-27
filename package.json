@@ -21,11 +21,12 @@
     "test:contract": "vitest run --project contract",
     "test:e2e": "playwright test",
     "test:a11y": "playwright test --project accessibility",
+    "test:design": "node scripts/check-design-system.mjs",
     "boundaries": "dependency-cruiser --validate .dependency-cruiser.cjs --exclude '(^|/)(\\.nuxt|\\.output|node_modules)/' apps packages",
     "unused": "knip",
     "scan:dependencies": "pnpm audit --prod --audit-level high",
     "scan:secrets": "node scripts/scan-secrets.mjs",
-    "validate": "pnpm typecheck && pnpm lint && pnpm test && pnpm build"
+    "validate": "pnpm typecheck && pnpm lint && pnpm test:design && pnpm test && pnpm build"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.13.0",

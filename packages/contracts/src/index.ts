@@ -57,7 +57,7 @@ export const ctaDefinitionSchema = z.object({
   kind: z.enum(['route', 'form', 'external', 'download', 'auth']),
   target: z.string().min(1),
   analyticsEvent: z.enum(['cta_click', 'pricing_cta_click', 'resource_download']),
-  variant: z.enum(['primary', 'secondary', 'text']),
+  variant: z.enum(['primary', 'secondary', 'quiet', 'text', 'link', 'danger']),
   consentRequired: z.boolean().optional(),
   allowedHosts: z.array(z.string()).optional(),
 })
