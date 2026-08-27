@@ -6,7 +6,7 @@
       :checked="modelValue"
       :required="required"
       @change="$emit('update:modelValue', ($event.target as HTMLInputElement).checked)"
-    />
+    >
     <span><slot /></span>
   </label>
 </template>

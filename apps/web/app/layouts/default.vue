@@ -11,6 +11,8 @@
 </template>
 
 <script setup lang="ts">
+defineOptions({ name: 'MarketingDefaultLayout' })
+
 const { t, locale } = useLocale()
 
 useHead(() => ({ htmlAttrs: { lang: locale.value } }))

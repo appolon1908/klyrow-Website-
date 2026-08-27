@@ -19,7 +19,7 @@
           <div class="system-panel__header"><span>Klyrow control plane</span><span>Governed delivery</span></div>
           <div class="system-panel__body">
             <div v-for="item in systemFlow" :key="item.name" class="system-row">
-              <span class="system-row__status" aria-hidden="true"></span>
+              <span class="system-row__status" aria-hidden="true" />
               <div><strong>{{ item.name }}</strong><small>{{ item.detail }}</small></div>
               <span>{{ item.state }}</span>
             </div>

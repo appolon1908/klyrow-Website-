@@ -7,12 +7,12 @@
       :name="name"
       :type="type"
       :value="modelValue"
-      :autocomplete="autocomplete"
+      :autocomplete="autocomplete || undefined"
       :required="required"
       :aria-describedby="hint ? `${id}-hint` : undefined"
       :aria-invalid="invalid || undefined"
       @input="$emit('update:modelValue', ($event.target as HTMLInputElement).value)"
-    />
+    >
     <span v-if="hint" :id="`${id}-hint`" class="field__hint">{{ hint }}</span>
   </label>
 </template>
@@ -24,13 +24,13 @@ withDefaults(
     name: string
     label: string
     modelValue: string
-    hint?: string
+    hint?: string | null
     type?: 'text' | 'email' | 'tel' | 'password' | 'url'
-    autocomplete?: string
+    autocomplete?: string | null
     required?: boolean
     invalid?: boolean
   }>(),
-  { type: 'text', required: false, invalid: false },
+  { hint: null, type: 'text', autocomplete: null, required: false, invalid: false },
 )
 defineEmits<{ 'update:modelValue': [value: string] }>()
 </script>
