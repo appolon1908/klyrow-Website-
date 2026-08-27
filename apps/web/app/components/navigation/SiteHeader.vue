@@ -42,6 +42,7 @@
 </template>
 
 <script setup lang="ts">
+import { useLocale } from '../../composables/useLocale'
 import { navigationGroups, primaryLinks } from '../../data/navigation'
 
 const route = useRoute()

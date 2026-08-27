@@ -3,6 +3,8 @@
 </template>
 
 <script setup lang="ts">
+import { useLocale } from '../../composables/useLocale'
+
 const { locale, t, switchLocalePath } = useLocale()
 </script>
 

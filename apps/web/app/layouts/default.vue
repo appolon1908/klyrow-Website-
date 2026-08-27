@@ -11,6 +11,8 @@
 </template>
 
 <script setup lang="ts">
+import { useLocale } from '../composables/useLocale'
+
 defineOptions({ name: 'MarketingDefaultLayout' })
 
 const { t, locale } = useLocale()
