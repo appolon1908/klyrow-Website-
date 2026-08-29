@@ -1,6 +1,16 @@
 # Klyrow Website
 
-Public marketing website repository for Klyrow, the governed customer-communications platform.
+## Repository authority
+
+This repository is the **public Klyrow marketing website frontend authority**.
+
+`appolon1908-hue/klyrow.com` is the separate **Klyrow email/SaaS backend and runtime authority**. It owns Postal/Mautic integration, tenant/application state, authenticated email/campaign APIs, delivery events, suppressions, domain onboarding, billing foundations and runtime operations.
+
+This website must not create a second Postal/Mautic backend, email queue, delivery ledger, tenant database or provider credential store. Browser forms and customer actions must cross the governed Kong/Middleware boundary and must not write directly to Odoo, n8n, Postal, Mautic or provider databases.
+
+```text
+Browser -> klyrow-Website- -> Kong/Middleware -> klyrow.com -> Postal/Mautic
+```
 
 ## Current status
 
