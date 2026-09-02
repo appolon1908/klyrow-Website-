@@ -1,0 +1,32 @@
+{
+  "schemaVersion": "2.0.0",
+  "repository": "appolon1908-hue/klyrow-Website-",
+  "classification": "first-party-ui",
+  "targetBranch": "codex/codestra-orbit-v2-klyrow-website",
+  "adoptionMode": "full-shell",
+  "domain": null,
+  "domainStatus": "pending-registration",
+  "requirements": {
+    "sharedPackages": true,
+    "sharedHeader": true,
+    "sharedFooter": true,
+    "login": true,
+    "signup": true,
+    "session": true,
+    "logout": true,
+    "logoutAll": true,
+    "protectedDeepLinks": true,
+    "multiTabLogout": true,
+    "browserTokenStorageProhibited": true,
+    "semanticColors": true,
+    "routeManifest": true,
+    "newPageGate": true,
+    "responsiveEvidence": true
+  },
+  "status": "branch-created",
+  "blockers": [
+    "Pin the immutable @corporate package artifacts after SDK-repository pull request 75 is protected-merged.",
+    "Resolve whether this repository is authoritative for any klyrow.com route before assigning a hostname already owned by appolon1908-hue/klyrow.com.",
+    "Inventory every rendered route and state, replace local shell/auth copies, and add repository-native CI before promotion."
+  ]
+}
