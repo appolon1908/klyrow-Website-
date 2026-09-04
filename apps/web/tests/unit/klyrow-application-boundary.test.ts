@@ -3,7 +3,11 @@ import { join } from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { describe, expect, it } from 'vitest'
 
-import { applicationBoundary, klyrowDomains } from '../../app/config/domains'
+import {
+  applicationBoundary,
+  horizonContract,
+  klyrowDomains
+} from '../../app/config/domains'
 
 const appRoot = fileURLToPath(new URL('../../app', import.meta.url))
 
@@ -32,6 +36,16 @@ const forbiddenMarkers = [
 ]
 
 describe('public website application boundary', () => {
+  it('pins the Horizon visual contract and validator by exact SHA', () => {
+    expect(horizonContract.repository).toBe('appolon1908-hue/SDK-repository')
+    expect(horizonContract.commit).toBe(
+      '7db4c6549a0a007922355090f03c082a308f3855'
+    )
+    expect(horizonContract.validatorCommit).toBe(
+      'b258cf952df3a2ef11a2ba2e0df16c7983ee2a99'
+    )
+  })
+
   it('pins application handoffs to the canonical app origin', () => {
     expect(klyrowDomains.application).toBe('https://app.klyrow.com')
     expect(klyrowDomains.login).toBe('https://app.klyrow.com/auth/login')
