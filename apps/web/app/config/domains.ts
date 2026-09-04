@@ -23,7 +23,7 @@ export const applicationBoundary = Object.freeze({
   marketingSurface: 'public-only',
   authentication: 'external-application-handoff',
   browserTokenStorage: 'forbidden',
-  sessionStorage: 'server-side-encrypted',
+  sessionAuthority: 'server-side-encrypted',
   durableIdentity: 'issuer+subject'
 })
 
