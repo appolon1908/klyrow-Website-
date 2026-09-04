@@ -26,7 +26,7 @@ jobs:
         uses: actions/checkout@fbc6f3992d24b796d5a048ff273f7fcc4a7b6c09
         with:
           fetch-depth: 0
-          persist-credentials: false
+          persist-credentials: true
       - name: Enforce registered suites, public auth boundary, page inheritance, and color tokens
         uses: appolon1908-hue/SDK-repository/.github/actions/horizon-validate@b258cf952df3a2ef11a2ba2e0df16c7983ee2a99
         with:
