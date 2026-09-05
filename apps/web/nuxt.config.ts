@@ -2,7 +2,11 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   ssr: true,
   devtools: { enabled: false },
-  css: ['~/assets/css/horizon.css', '~/assets/css/auth.css'],
+  css: [
+    '~/assets/css/horizon.css',
+    '~/assets/css/auth.css',
+    '~/assets/css/content.css'
+  ],
   app: {
     head: {
       charset: 'utf-8',

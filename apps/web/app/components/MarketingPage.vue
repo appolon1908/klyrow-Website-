@@ -9,10 +9,10 @@ const props = defineProps<{
   title: string
   lead: string
   sections: readonly ContentSection[]
-  primaryLabel?: string
-  primaryTo?: string
-  secondaryLabel?: string
-  secondaryTo?: string
+  primaryLabel?: string | undefined
+  primaryTo?: string | undefined
+  secondaryLabel?: string | undefined
+  secondaryTo?: string | undefined
 }>()
 </script>
 
