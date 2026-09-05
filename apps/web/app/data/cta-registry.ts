@@ -19,7 +19,7 @@ export interface CtaRuntimeValues {
 export interface ResolvedRegisteredCta {
   disabled: boolean
   external: boolean
-  href?: string
+  href: string | undefined
   id: CtaId
   label: string
   variant: CtaDefinition['variant']
