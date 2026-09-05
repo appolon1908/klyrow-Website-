@@ -47,6 +47,16 @@ const secondaryTarget = computed(() =>
       )
     : undefined
 )
+const conversionTitle = computed(() =>
+  locale.value === 'es'
+    ? 'Construye la siguiente etapa con una ruta revisable.'
+    : 'Build the next stage with a reviewable path.'
+)
+const conversionCopy = computed(() =>
+  locale.value === 'es'
+    ? 'Empieza con una conversación enfocada y conserva evidencia desde la primera decisión.'
+    : 'Start with a focused conversation and preserve evidence from the first decision.'
+)
 </script>
 
 <template>
@@ -60,7 +70,11 @@ const secondaryTarget = computed(() =>
         </li>
         <li aria-current="page">{{ page.title }}</li>
       </ol>
-      <NuxtLink class="hz-content-language" :to="oppositeLocalePath" :hreflang="locale === 'es' ? 'en' : 'es'">
+      <NuxtLink
+        class="hz-content-language"
+        :to="oppositeLocalePath"
+        :hreflang="locale === 'es' ? 'en' : 'es'"
+      >
         {{ locale === 'es' ? 'English' : 'Español' }}
       </NuxtLink>
     </nav>
@@ -75,6 +89,9 @@ const secondaryTarget = computed(() =>
       :secondary-label="secondaryTarget ? page.secondaryCta?.label : undefined"
       :secondary-to="secondaryTarget"
     />
+
+    <PricingExperience v-if="page.kind === 'pricing'" />
+    <UseCaseSelector v-if="page.kind === 'home'" />
 
     <section class="hz-section">
       <div class="hz-container hz-grid hz-content-detail-grid">
@@ -104,5 +121,11 @@ const secondaryTarget = computed(() =>
         </aside>
       </div>
     </section>
+
+    <ConversionBand
+      :title="conversionTitle"
+      :copy="conversionCopy"
+      :cta-id="page.kind === 'developer' ? 'developer-api-interest' : 'nav-request-demo'"
+    />
   </article>
 </template>

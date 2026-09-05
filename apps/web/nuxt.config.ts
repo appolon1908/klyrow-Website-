@@ -5,7 +5,8 @@ export default defineNuxtConfig({
   css: [
     '~/assets/css/horizon.css',
     '~/assets/css/auth.css',
-    '~/assets/css/content.css'
+    '~/assets/css/content.css',
+    '~/assets/css/conversion.css'
   ],
   app: {
     head: {
@@ -29,7 +30,14 @@ export default defineNuxtConfig({
       canonicalSiteUrl: 'https://klyrow.com',
       applicationBaseUrl: 'https://app.klyrow.com',
       applicationLoginUrl: 'https://app.klyrow.com/auth/login',
-      applicationSignupUrl: 'https://app.klyrow.com/auth/signup'
+      applicationSignupUrl: 'https://app.klyrow.com/auth/signup',
+      contactUrl: 'https://codestra.co/contact',
+      docsUrl: '',
+      statusUrl: '',
+      schedulingUrl: '',
+      pricingMode: 'contact_sales',
+      engagementPopupEnabled: false,
+      announcement: ''
     }
   },
   routeRules: {
@@ -37,5 +45,6 @@ export default defineNuxtConfig({
       headers: { 'x-robots-tag': 'noindex, nofollow, noarchive' }
     }
   },
+  nitro: { compressPublicAssets: true },
   typescript: { strict: true, typeCheck: true }
 })

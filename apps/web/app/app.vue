@@ -46,6 +46,7 @@ useHead(() => ({
     <a class="hz-skip-link" href="#main-content">
       {{ locale === 'es' ? 'Saltar al contenido principal' : 'Skip to main content' }}
     </a>
+    <AnnouncementBanner />
     <AppHeader />
     <AuthNotice />
     <NuxtErrorBoundary>
@@ -57,5 +58,6 @@ useHead(() => ({
       </template>
     </NuxtErrorBoundary>
     <AppFooter />
+    <EngagementPopup />
   </div>
 </template>
