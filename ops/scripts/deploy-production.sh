@@ -1,96 +1,31 @@
 #!/usr/bin/env bash
 set -Eeuo pipefail
-source "$(dirname "$0")/provider-host-lib.sh"
-verify_provider_host
 
-"$(dirname "$0")/release-preflight.sh"
-release="$KLYROW_RELEASE_SHA"
-root="${KLYROW_RELEASE_ROOT:-/srv/klyrow-website}"
-release_dir="$root/releases/$release"
-evidence="$root/evidence/production-$release"
-mkdir -p "$release_dir" "$evidence"
+cat >&2 <<'EOF'
+ERROR=direct_production_deploy_disabled
 
-previous=""
-if [[ -L "$root/current" ]]; then
-  previous="$(basename "$(readlink -f "$root/current")")"
-fi
-printf '%s\n' "$KLYROW_WEBSITE_IMAGE" >"$release_dir/image.txt"
-cp "$KLYROW_RELEASE_MANIFEST" "$release_dir/release-manifest.json"
-printf '%s\n' "$previous" >"$release_dir/previous-release.txt"
+Production deployment is controlled by the reviewed GitOps flow:
 
-snapshot_protected_services "$evidence/before.txt"
-verify_protected_urls
+  .github/workflows/gitops-promote.yml
+  ops/gitops/scripts/apply-deployment.sh
+  /usr/local/libexec/klyrow-website-gitops-operator
 
-backup_output="$("$(dirname "$0")/backup-provider-nginx.sh")"
-nginx_archive="${backup_output#NGINX_BACKUP=}"
-printf '%s\n' "$nginx_archive" >"$release_dir/nginx-backup.txt"
+The legacy direct script is intentionally fail-closed because provider-host
+runtime paths have not been verified and the previous release branch referenced
+host helper scripts that were not present in the same reviewed tree.
 
-candidate_output="$("$(dirname "$0")/build-nginx-candidate.sh")"
-candidate="${candidate_output#CANDIDATE_PATH=}"
-printf '%s\n' "$candidate" >"$release_dir/nginx-candidate.txt"
+Required before apply:
 
-rollback_required=1
-rollback() {
-  local exit_code=$?
-  if [[ "$rollback_required" == 1 ]]; then
-    echo "DEPLOYMENT_FAILED=YES EXIT_CODE=$exit_code" | tee -a "$evidence/deployment.log"
-    if [[ "$previous" =~ ^[a-f0-9]{40}$ ]]; then
-      KLYROW_NGINX_ROLLBACK_ARCHIVE="$nginx_archive" \
-        "$(dirname "$0")/rollback-production.sh" "$previous" "$nginx_archive" \
-        | tee "$evidence/rollback.log" || true
-    else
-      "$(dirname "$0")/rollback-provider-nginx.sh" "$nginx_archive" \
-        | tee "$evidence/nginx-rollback.log" || true
-      docker compose -f docker-compose.production.yml down \
-        | tee "$evidence/candidate-stop.log" || true
-    fi
-  fi
-  exit "$exit_code"
-}
-trap rollback ERR INT TERM
+  1. read-only provider runtime discovery;
+  2. reviewed runtime-paths.json with status=verified;
+  3. approved repository-owned release-intent.json;
+  4. exact current main intent commit;
+  5. immutable image digest and SBOM;
+  6. staging and rollback evidence;
+  7. protected production environment approval;
+  8. root-owned restricted operator installation.
 
-docker pull "$KLYROW_WEBSITE_IMAGE" | tee "$evidence/image-pull.log"
-docker compose -f docker-compose.production.yml up -d --no-build --pull never website \
-  | tee "$evidence/compose-up.log"
+No live server change was attempted.
+EOF
 
-for attempt in {1..30}; do
-  if curl -fsS --max-time 3 \
-    "http://127.0.0.1:${KLYROW_PRODUCTION_PORT:-18110}/api/v1/health" >/dev/null; then
-    break
-  fi
-  sleep 2
-  [[ "$attempt" != 30 ]] || fail "production_candidate_health_timeout"
-done
-
-"$(dirname "$0")/docker-smoke.sh" \
-  "http://127.0.0.1:${KLYROW_PRODUCTION_PORT:-18110}" \
-  | tee "$evidence/loopback-smoke.log"
-container_id="$(docker compose -f docker-compose.production.yml ps -q website)"
-"$(dirname "$0")/verify-container.sh" "$container_id" \
-  | tee "$evidence/container-security.log"
-
-KLYROW_OWNER_GO=YES \
-  "$(dirname "$0")/apply-provider-nginx-edge.sh" "$candidate" \
-  | tee "$evidence/nginx-activation.log"
-"$(dirname "$0")/external-production-smoke.sh" \
-  | tee "$evidence/external-smoke.log"
-
-soak_seconds="${KLYROW_SOAK_SECONDS:-120}"
-started="$(date +%s)"
-while (( $(date +%s) - started < soak_seconds )); do
-  curl -fsS --max-time 5 https://klyrow.com/api/v1/health >/dev/null
-  curl -fsS --max-time 5 https://app.klyrow.com/ >/dev/null
-  curl -fsS --max-time 5 https://api.klyrow.com/ >/dev/null
-  verify_protected_urls
-  sleep 10
-done
-
-snapshot_protected_services "$evidence/after.txt"
-"$(dirname "$0")/collect-release-evidence.sh" "$evidence"
-ln -sfn "$release_dir" "$root/current"
-if [[ "$previous" =~ ^[a-f0-9]{40}$ ]]; then
-  ln -sfn "$root/releases/$previous" "$root/previous"
-fi
-rollback_required=0
-trap - ERR INT TERM
-echo "PRODUCTION_DEPLOYMENT=PASS RELEASE=$release IMAGE=$KLYROW_WEBSITE_IMAGE PREVIOUS=${previous:-none}"
+exit 1

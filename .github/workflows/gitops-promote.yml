@@ -1,0 +1,134 @@
+name: GitOps plan or promote Klyrow Website
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: Plan is non-mutating; apply requires verified runtime paths and production approval
+        required: true
+        type: choice
+        default: plan
+        options:
+          - plan
+          - apply
+      intent_commit:
+        description: Exact 40-character current main SHA containing the approved release intent
+        required: true
+        type: string
+
+permissions:
+  contents: read
+  packages: read
+
+concurrency:
+  group: klyrow-website-gitops-${{ inputs.mode }}
+  cancel-in-progress: false
+
+env:
+  RUNTIME_PATHS: ops/gitops/environments/production/runtime-paths.json
+  DEPLOYMENT_POLICY: ops/gitops/environments/production/deployment-policy.json
+  RELEASE_INTENT: ops/gitops/environments/production/release-intent.json
+
+jobs:
+  plan:
+    if: github.ref == 'refs/heads/main'
+    runs-on: ubuntu-24.04
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Pin promotion to current main
+        env:
+          INTENT_COMMIT: ${{ inputs.intent_commit }}
+        run: |
+          set -Eeuo pipefail
+          [[ "$INTENT_COMMIT" =~ ^[a-f0-9]{40}$ ]]
+          git fetch --quiet origin main
+          test "$INTENT_COMMIT" = "$(git rev-parse origin/main)"
+          test "$INTENT_COMMIT" = "$(git rev-parse HEAD)"
+          test -z "$(git status --porcelain)"
+      - uses: actions/setup-python@a26af69be951a213d495a4c3e4e4022e16d87065 # v5
+        with:
+          python-version: '3.12'
+      - name: Require repository-owned release intent
+        run: |
+          set -Eeuo pipefail
+          test -f "$RELEASE_INTENT" || {
+            echo 'ERROR=approved_release_intent_missing' >&2
+            exit 1
+          }
+      - name: Validate runtime and immutable intent
+        run: |
+          set -Eeuo pipefail
+          python ops/gitops/scripts/validate-runtime-paths.py \
+            "$RUNTIME_PATHS" "$DEPLOYMENT_POLICY" --mode plan
+          python ops/gitops/scripts/validate-release-intent.py \
+            "$RELEASE_INTENT" "$DEPLOYMENT_POLICY" "$RUNTIME_PATHS" --mode plan
+          release_sha="$(python -c 'import json; print(json.load(open("ops/gitops/environments/production/release-intent.json"))["release_sha"])')"
+          git merge-base --is-ancestor "$release_sha" origin/main
+      - name: Generate plan artifact
+        run: |
+          set -Eeuo pipefail
+          bash ops/gitops/scripts/plan-deployment.sh \
+            "$RUNTIME_PATHS" "$DEPLOYMENT_POLICY" "$RELEASE_INTENT" \
+            artifacts/gitops-plan.json
+          sha256sum \
+            "$RUNTIME_PATHS" \
+            "$DEPLOYMENT_POLICY" \
+            "$RELEASE_INTENT" \
+            artifacts/gitops-plan.json \
+            > artifacts/gitops-plan.sha256
+      - name: Enforce apply eligibility when requested
+        if: inputs.mode == 'apply'
+        run: |
+          set -Eeuo pipefail
+          python ops/gitops/scripts/validate-runtime-paths.py \
+            "$RUNTIME_PATHS" "$DEPLOYMENT_POLICY" --mode apply
+          python ops/gitops/scripts/validate-release-intent.py \
+            "$RELEASE_INTENT" "$DEPLOYMENT_POLICY" "$RUNTIME_PATHS" --mode apply
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: gitops-promotion-plan-${{ inputs.intent_commit }}
+          path: artifacts/gitops-plan*
+          if-no-files-found: error
+          retention-days: 30
+
+  apply:
+    if: inputs.mode == 'apply' && github.ref == 'refs/heads/main'
+    needs: plan
+    environment: production
+    runs-on: [self-hosted, linux, x64, klyrow-provider]
+    timeout-minutes: 45
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: ${{ inputs.intent_commit }}
+          fetch-depth: 0
+          persist-credentials: false
+      - name: Reconfirm current-main and clean checkout
+        env:
+          INTENT_COMMIT: ${{ inputs.intent_commit }}
+        run: |
+          set -Eeuo pipefail
+          git fetch --quiet origin main
+          test "$INTENT_COMMIT" = "$(git rev-parse origin/main)"
+          test "$INTENT_COMMIT" = "$(git rev-parse HEAD)"
+          test -z "$(git status --porcelain)"
+      - name: Apply through restricted operator
+        env:
+          KLYROW_GITOPS_MODE: apply
+        run: |
+          set -Eeuo pipefail
+          bash ops/gitops/scripts/apply-deployment.sh \
+            "$RUNTIME_PATHS" "$DEPLOYMENT_POLICY" "$RELEASE_INTENT"
+      - name: Upload non-secret release evidence
+        if: always()
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: gitops-production-evidence-${{ inputs.intent_commit }}
+          path: artifacts/production-evidence/**
+          if-no-files-found: warn
+          retention-days: 30

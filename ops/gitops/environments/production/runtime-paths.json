@@ -1,0 +1,30 @@
+{
+  "schema_version": 1,
+  "environment": "production",
+  "status": "unverified",
+  "verified_at": null,
+  "verified_by": null,
+  "host": {
+    "expected_public_ip": "37.27.128.39",
+    "expected_private_ip": "10.40.0.4",
+    "hostname": null,
+    "machine_id_sha256": null
+  },
+  "runtime": {
+    "release_root": null,
+    "secrets_root": null,
+    "compose_file": null,
+    "nginx_root": null,
+    "legacy_nginx_site": null,
+    "nginx_binary": null,
+    "docker_binary": null,
+    "operator_path": null,
+    "production_port": 18110,
+    "staging_port": 18111
+  },
+  "evidence": {
+    "discovery_artifact_sha256": null,
+    "reviewed_pr": null,
+    "notes": "Apply is intentionally blocked until read-only provider-host discovery is reviewed and these values are verified in a separate pull request."
+  }
+}

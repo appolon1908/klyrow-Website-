@@ -1,0 +1,62 @@
+name: GitOps provider runtime discovery
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: klyrow-provider-runtime-discovery
+  cancel-in-progress: false
+
+jobs:
+  discover:
+    if: github.ref == 'refs/heads/main'
+    environment: provider-readonly
+    runs-on: [self-hosted, linux, x64, klyrow-provider]
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+        with:
+          ref: main
+          persist-credentials: false
+      - name: Verify restricted runner and provider host
+        run: |
+          set -Eeuo pipefail
+          test "$(id -u)" -ne 0
+          host_ips=" $(hostname -I 2>/dev/null || true) "
+          if [[ "$host_ips" != *' 37.27.128.39 '* && "$host_ips" != *' 10.40.0.4 '* ]]; then
+            echo 'ERROR=provider_host_identity_mismatch' >&2
+            exit 1
+          fi
+          test -z "$(git status --porcelain)"
+          echo "DISCOVERY_USER=$(id -un)"
+          echo "DISCOVERY_HOST=$(hostname)"
+          echo "LIVE_SERVER_MUTATION=NO"
+      - name: Collect read-only runtime evidence
+        run: |
+          set -Eeuo pipefail
+          bash ops/gitops/scripts/discover-runtime-paths.sh artifacts
+      - name: Assert discovery did not claim mutation
+        run: |
+          set -Eeuo pipefail
+          python - <<'PY'
+          import glob
+          import json
+          paths = glob.glob('artifacts/runtime-discovery-*.json')
+          assert len(paths) == 1, paths
+          with open(paths[0], encoding='utf-8') as handle:
+              evidence = json.load(handle)
+          assert evidence['mode'] == 'read_only_discovery'
+          assert evidence['mutations_performed'] == []
+          assert evidence['secret_contents_read'] is False
+          assert evidence['host']['runner_uid'] != 0
+          PY
+      - name: Upload read-only discovery artifact
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
+        with:
+          name: provider-runtime-discovery-${{ github.run_id }}
+          path: artifacts/runtime-discovery-*
+          if-no-files-found: error
+          retention-days: 30
