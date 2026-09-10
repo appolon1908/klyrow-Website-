@@ -22,18 +22,15 @@ const allowedRoute = computed(() => {
   ].includes(path)
 })
 
-const dismissed = () =>
-  import.meta.client && sessionStorage.getItem('klyrow_engagement_dismissed') === '1'
+const dismissed = useState('klyrow_engagement_dismissed', () => false)
 
 const dismiss = () => {
   dialog.value?.close()
-  if (import.meta.client) {
-    sessionStorage.setItem('klyrow_engagement_dismissed', '1')
-  }
+  dismissed.value = true
 }
 
 const maybeOpen = () => {
-  if (!import.meta.client || !enabled.value || !allowedRoute.value || dismissed()) return
+  if (!import.meta.client || !enabled.value || !allowedRoute.value || dismissed.value) return
   if (dialog.value && !dialog.value.open) dialog.value.showModal()
 }
 

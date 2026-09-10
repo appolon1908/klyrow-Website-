@@ -264,6 +264,18 @@ export const resolveRegisteredCta = (
       }
     }
 
+    // A configured but rejected handoff must not silently change its destination.
+    if (options.runtime.contactUrl) {
+      return {
+        disabled: true,
+        external: false,
+        href: undefined,
+        id,
+        label: registered.labels[options.locale],
+        variant: definition.variant
+      }
+    }
+
     const localFormRoute = localizedContentPath(
       options.locale,
       formRouteMap[definition.target] ?? '/contact'
