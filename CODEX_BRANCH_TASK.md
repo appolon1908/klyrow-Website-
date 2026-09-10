@@ -1,158 +1,149 @@
-# Codex Branch Task — Provider Host Nginx Edge
+# Codex Branch Task — Klyrow Website Production V1 on Provider Host
 
 ## Branch
 
 ```text
-ops/provider-host-nginx-edge
+release/website-production-v1
 ```
 
-## Prerequisite
+## Prerequisites
 
-Update from the accepted `ops/docker-runtime` head and all exact reviewed application prerequisites before implementation.
+Do not implement or deploy until every selected feature, performance, Docker and `ops/provider-host-nginx-edge` PR is independently reviewed and merged into the exact release candidate.
 
-## Target
+`ops/caddy-edge` is superseded and is not a release prerequisite.
+
+## Production target
 
 ```text
 Host: 37.27.128.39
 Private IP: 10.40.0.4
 Edge: existing Nginx + Certbot
-Website production upstream: 127.0.0.1:18110 after free-port verification
-Website staging upstream: 127.0.0.1:18111 after free-port verification
+Website upstream: 127.0.0.1:18110 after free-port verification
+Staging upstream: 127.0.0.1:18111 after free-port verification
 ```
 
-Do not install or activate Caddy. Do not use port 3100.
-
-## Required reading
-
-Read completely:
-
-- `CODEX_PROVIDER_HOST_DEPLOYMENT_TASK.md`;
-- `docs/PROVIDER_HOST_NGINX_DEPLOYMENT.md`;
-- `docs/DOCKER_RUNTIME_AND_DEPLOYMENT.md`;
-- `docs/BRANCH_AND_DELIVERY_PLAN.md`;
-- website API/form/security/release contracts;
-- current Nginx configuration represented in `appolon1908-hue/klyrow.com`.
+Read `CODEX_PROVIDER_HOST_DEPLOYMENT_TASK.md` and `docs/PROVIDER_HOST_NGINX_DEPLOYMENT.md` completely. Their deployment rules override older Caddy/host/port instructions.
 
 ## Objective
 
-Prepare and rehearse a host-specific Nginx split that places the public marketing website on the same host as the Klyrow email platform while preserving every current application, API, delivery and operational service.
+Integrate the reviewed Klyrow public website, certify it on the provider host in staging, switch only apex/`www` website traffic through existing Nginx, verify production, and retain a proven rollback path.
 
-This branch may audit, generate, validate and stage the edge change. It must not activate public production traffic.
+This authorization applies only to the public website. It does not authorize live email changes, Postal/SMTP changes, real billing, Odoo accounting mutation, unrestricted n8n activation, Keycloak changes, Kyqra changes or unrelated infrastructure changes.
 
-## Mandatory preflight
+## Mandatory release inputs
 
-Record without exposing secrets:
+Record:
 
-```text
-HOSTNAME
-HOST_IPS
-LISTENING_PORTS
-RUNNING_SYSTEM_SERVICES
-DOCKER_CONTAINERS
-DOCKER_NETWORKS
-DISK_AND_INODES
-MEMORY
-NGINX_VERSION
-NGINX_SERVICE_STATE
-FULL_NGINX_CONFIG_PATHS
-CERTIFICATE_NAMES_AND_EXPIRY
-CURRENT_PUBLIC_HOST_RESULTS
-```
+- exact release SHA and immutable image digest;
+- SBOM, scans, provenance and checksums;
+- exact reviewed PR heads;
+- migration statement;
+- configuration inventory without secret values;
+- provider-host listener/service/container inventory;
+- complete current Nginx config and checksum-verified backup;
+- certificate names/expiry without private material;
+- current behavior of apex, `www`, `app`, `api`, `track` and `bounce`;
+- local health of Klyrow gateway, Postal, SMTP, Mautic, Grafana and Kyqra;
+- previous website release and rollback target;
+- host resource headroom.
 
-Verify known protected service ports and identify their actual owners. Stop if the preferred website ports are occupied.
+## Application certification
 
-## Protected services
+- type check, lint, unit/component/integration/contract tests;
+- Nuxt production build and prerender;
+- exact localized marketing/legal route counts;
+- CTA/form/API/legal/cookie registry checks;
+- idempotency/problem/security tests;
+- interactive-tool no-side-effect tests;
+- legal approval state and noindex/index rules.
 
-Preserve at minimum:
+## Browser and quality certification
 
-- Nginx public edge;
-- Klyrow gateway/application/API;
-- Postal web/workers/SMTP;
-- Mautic;
-- Grafana/operations;
-- Klyrow billing;
-- Keycloak/internal identity;
-- private gateway;
-- Kyqra crawler;
-- RabbitMQ, databases and messaging dependencies;
-- all current delivery/tracking/bounce routes.
+- mobile/tablet/laptop/wide-desktop Playwright;
+- axe and manual keyboard/WCAG 2.2 AA;
+- Lighthouse and bundle/image/font budgets;
+- broken links, canonical, hreflang, sitemap, robots and structured data;
+- cookie preference and analytics network behavior.
 
-No full Docker, Nginx, Postal, Klyrow, Mautic, SMTP, Keycloak or provider-stack restart is allowed.
+## Integration certification
 
-## Required hostname result
+- durable middleware acceptance for each form type in approved test/staging mode;
+- duplicate/idempotency, rejection and timeout behavior;
+- approved Odoo CRM/helpdesk/privacy-case mappings;
+- approved non-authoritative n8n routing/notification results;
+- no real invoice, payment, entitlement, live email or production billing action.
 
-```text
-klyrow.com
-www.klyrow.com       -> website candidate/upstream
+## Container and provider-host edge certification
 
-app.klyrow.com       -> preserve existing Klyrow application behavior
-api.klyrow.com       -> preserve existing Klyrow API behavior
-track.klyrow.com     -> preserve current delivery behavior
-bounce.klyrow.com    -> preserve current delivery behavior
-```
+- immutable image digest;
+- non-root/read-only/capability-free runtime;
+- loopback-only staging/production ports;
+- health/readiness, SIGTERM and restart recovery;
+- image scan and SBOM;
+- staging deployment and rollback rehearsal;
+- preferred ports proven free or approved alternatives recorded;
+- complete Nginx backup and full config validation;
+- DNS and ports 80/443;
+- TLS, cache, compression, security and body-limit headers;
+- `app` and `api` unchanged;
+- `track` and `bounce` unchanged;
+- Klyrow gateway, Postal, SMTP, Mautic, Grafana and Kyqra healthy before and after;
+- resource headroom and soak monitoring.
 
-Do not expose administrative paths on the marketing apex.
+## Production algorithm
 
-## Required implementation
+1. Confirm exact reviewed release and explicit owner GO.
+2. Verify provider-host identity and isolated website release workspace.
+3. Verify required secret files without printing values.
+4. Audit listeners and prove the website port is free.
+5. Capture current Nginx, certificate, container, hostname and protected-service evidence.
+6. Back up the complete Nginx configuration with checksums.
+7. Pull the exact immutable image digest.
+8. Start the website candidate on loopback.
+9. Run local health/readiness, routes, assets and form-safe smoke tests.
+10. Validate the complete host-specific Nginx candidate.
+11. Reverify app/api/track/bounce and all protected services.
+12. Install only the reviewed apex/`www` website host split.
+13. Run full Nginx validation.
+14. Gracefully reload Nginx only.
+15. Run external apex, `www`, TLS, route, asset, API-health and durable-form tests.
+16. Monitor website and existing Klyrow services during soak.
+17. Mark the website release current only after success.
+18. Preserve the previous website release, Nginx backup and evidence.
 
-- provider-host audit script;
-- protected-service verification script;
-- complete Nginx backup script with timestamp and checksums;
-- host-specific Nginx website fragment/template;
-- exact before/after host-routing manifest;
-- `www` to apex permanent redirect;
-- website reverse proxy to loopback only;
-- request ID and proxy headers;
-- bounded proxy timeouts;
-- request-body limits;
-- compression supported by installed Nginx;
-- immutable cache for hashed Nuxt assets;
-- no-cache/private policy for HTML and sensitive APIs;
-- tested security headers;
-- privacy-safe logs and rotation;
-- candidate configuration assembly without editing live config;
-- full Nginx validation script;
-- Nginx-only graceful reload script guarded for the release branch;
-- checksum-verified rollback script;
-- local/staging host-header and TLS smoke tests;
-- protected-service before/after tests;
-- runbook and exact evidence template.
+## Stop and rollback conditions
 
-## Cross-repository requirement
+- chosen port is occupied;
+- Nginx validation fails;
+- health/readiness or durable forms fail;
+- apex/`www`/TLS regression;
+- app/api/track/bounce regression;
+- Klyrow, Postal, SMTP, Mautic, Grafana or Kyqra degradation;
+- material 5xx, latency, memory, CPU, disk or log regression;
+- missing secret, certificate, DNS, approved integration, artifact, review or rollback evidence.
 
-The current Nginx topology is represented in `appolon1908-hue/klyrow.com`. Create or reference a dedicated reviewed Klyrow software PR for the production host split. Do not leave the live edge change untracked in either repository.
+Rollback restores the checksum-verified prior Nginx config and prior website release, validates Nginx, gracefully reloads Nginx only, and verifies every protected hostname/service. Do not restart the Docker daemon or provider stack.
 
-## Required tests
+## Required final report
 
-- preferred production/staging ports are free;
-- website staging container is healthy on loopback;
-- complete candidate Nginx configuration validates;
-- no unrelated Nginx host changes;
-- apex and `www` behavior passes in staging/host-header simulation;
-- `app` and `api` remain unchanged;
-- `track` and `bounce` remain unchanged;
-- Klyrow gateway, Postal, SMTP, Mautic, Grafana and Kyqra remain healthy;
-- body limits, cache and security headers pass;
-- upstream failure returns safe errors;
-- Nginx reload command is not executed from this branch against public production;
-- rollback rehearsal restores the prior candidate configuration;
-- secret and private-key scans pass.
+Provide:
 
-## Git delivery
+1. host, IPs, listener inventory and directories;
+2. release SHA, digest, checksums, scans and SBOM;
+3. reviewed PRs and heads;
+4. routes/locales/sitemaps/legal states;
+5. CTA/form/API/cookie registry results;
+6. type/lint/test/build/browser/accessibility/Lighthouse results;
+7. middleware/Odoo/n8n approved test evidence;
+8. container security and staging rollback evidence;
+9. Nginx backup, diff, validation and reload evidence;
+10. DNS/TLS/HTTP/cache/header evidence;
+11. app/api/track/bounce unchanged evidence;
+12. Klyrow/Postal/SMTP/Mautic/Grafana/Kyqra health evidence;
+13. resource/soak evidence;
+14. exact rollback command and target;
+15. blockers/limitations;
+16. confirmation that Caddy was not installed or activated;
+17. confirmation that live email, Postal, SMTP, billing, Odoo accounting and unrelated services were unchanged.
 
-Push only this branch, open/update one draft PR and attach exact audit, config diff, validation, protected-service and rollback evidence.
-
-Stop before `release/website-production-v1`.
-
-## Prohibited
-
-- no Caddy installation;
-- no public production activation;
-- no public DNS mutation;
-- no full provider-stack restart;
-- no unrelated Nginx site edit;
-- no TLS private-key commit;
-- no port takeover;
-- no direct Postal/Odoo/n8n/Keycloak/database mutation;
-- no live email or billing change;
-- no untracked live configuration edit.
+Do not claim completion if any gate is missing or unmeasured.
