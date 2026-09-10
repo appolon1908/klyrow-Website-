@@ -1,139 +1,118 @@
-# Codex Branch Task — Consent-Aware Analytics and Attribution
+# Codex Branch Task — Core Web Vitals and Accessibility Certification
 
 ## Branch
 
 ```text
-feat/analytics-consent
-```
-
-## Status
-
-```text
-FEATURE_STATUS=SCAFFOLDED
-APPLICATION_CODE_PRESENT=NO
-ANALYTICS_ACTIVE=NO
-STAGING_CHANGED=NO
-PRODUCTION_CHANGED=NO
+perf/core-web-vitals-accessibility
 ```
 
 ## Prerequisites
 
-Before implementation, recreate/update this branch from accepted:
-
-```text
-feat/feature-pricing-conversion
-feat/forms-conversion-engine
-feat/legal-privacy-cookie-center
-```
-
-Read the legal/privacy cookie contract and existing consent implementation before editing.
+Update from all accepted user-facing website branches before implementation.
 
 ## Objective
 
-Add optional, environment-configured, privacy-respecting analytics and attribution by consuming the single consent/category gate created by `feat/legal-privacy-cookie-center`.
+Measure and remediate performance and accessibility as a dedicated engineering effort. Do not hide regressions inside a broad SEO or deployment PR.
 
-Do not create a second cookie banner, second preference store, separate consent cookie, or competing category model.
+## Performance targets
+
+```text
+LCP <= 2.5 seconds
+INP <= 200 milliseconds
+CLS <= 0.1
+```
+
+Lighthouse CI mobile minimums on home, pricing, one solution and one feature route:
+
+```text
+Performance >= 95
+Accessibility = 100
+Best Practices >= 95
+SEO = 100
+```
+
+Budgets:
+
+```text
+Initial compressed JavaScript <= 180 KB
+Initial compressed CSS <= 70 KB
+Critical font transfer <= 100 KB
+No single above-fold raster image > 180 KB
+No optional third-party analytics before consent
+```
 
 ## Required implementation
 
-- consume the existing legal/cookie consent state and adapter interface;
-- GTM/GA4 adapter loaded only when configured and permitted by category/applicability policy;
-- no tracking identifiers hard-coded in source;
-- approved typed event dictionary;
-- CTA, pricing, form, locale, resource, popup, consent, and interactive-tool events;
-- UTM normalization and attribution handoff to forms/middleware;
-- privacy-safe first-party request/submission correlation where approved;
-- development/test traffic labeling or exclusion;
-- sensitive-value redaction/filtering;
-- consent change, withdrawal, reset, and GPC-driven update behavior;
-- analytics adapter unload/disable behavior where technically supported;
-- optional analytics failure never breaks navigation, forms, legal pages, cookie settings, or tools;
-- category/provider registration in the shared cookie/storage registry.
+- Bundle and route analysis.
+- Remove unused dependencies and code.
+- Route/component lazy loading.
+- Lazy load interactive tools.
+- Responsive AVIF/WebP images with intrinsic dimensions.
+- Above-fold image preload only when measured.
+- Local/subset font strategy with no more than two families and four initial files.
+- Hydration reduction and server-rendered static content.
+- Avoid heavy carousel/animation libraries.
+- Prevent layout shifts from images, fonts, menus, popups and forms.
+- Optimize API/form interaction latency.
+- Core Web Vitals instrumentation with privacy-safe aggregation hooks.
+- Reduced-motion enforcement.
+- WCAG 2.2 AA remediation across all representative templates and forms.
+- 320px to wide-desktop responsive verification.
+- 200% zoom verification.
+- Touch-target and focus visibility checks.
 
-## Approved events
+## Device/browser matrix
+
+At minimum:
 
 ```text
-page_view
-cta_click
-pricing_plan_view
-pricing_cta_click
-form_start
-form_validation_error
-form_submit
-form_submit_success
-form_submit_failure
-language_change
-resource_download
-outbound_link
-video_play
-popup_view
-popup_submit
-tool_start
-tool_complete
-tool_failure
-consent_update
-consent_withdraw
-cookie_settings_open
-privacy_request_start
-privacy_request_success
+mobile Chromium
+mobile WebKit
+small tablet
+large tablet
+laptop Chromium
+wide desktop Chromium
 ```
 
-## Payload rules
+Add Firefox where CI capacity permits.
 
-Never send:
+## Required accessibility coverage
 
-- passwords, API keys, tokens, or authorization headers;
-- complete email addresses or phone numbers;
-- free-form support/demo/privacy/security/abuse message bodies;
-- CAPTCHA tokens;
-- full IP addresses;
-- cookie consent IDs unless explicitly approved and purpose-limited;
-- middleware/Odoo/n8n identifiers not approved for analytics;
-- privacy-request public tokens;
-- sensitive customer/product data;
-- legal evidence or document acceptance proof beyond approved document ID/version events.
+- Skip link.
+- Heading order.
+- Landmarks.
+- Labels/descriptions.
+- Error summaries/live regions.
+- Menu/drawer/dialog/tab/accordion semantics.
+- Focus order, trap and restoration.
+- Keyboard-only flows.
+- Color contrast.
+- Reduced motion.
+- Content not dependent on hover.
+- 200% zoom and reflow.
+- Language metadata.
+- Mobile touch targets.
 
-Prefer anonymous aggregate events. Any pseudonymous identifier requires documented purpose, retention, configuration, and tests.
+## Required tests/evidence
 
-## Consent integration requirements
+- Exact bundle sizes by representative route.
+- Lighthouse CI reports.
+- Playwright matrix results.
+- axe results with zero serious/critical violations.
+- Keyboard assertions for navigation, popup, tools and all forms.
+- Web Vitals measurements or lab proxies with limitations documented.
+- Image/font audit.
+- No unbounded long tasks or obvious hydration errors.
+- Type check, lint, tests and production build.
 
-- necessary-only startup in strict mode;
-- no optional analytics network request before analytics permission;
-- no analytics script inserted merely because the banner rendered;
-- reject and GPC opt-out prevent analytics initialization when applicable;
-- changing preferences updates future event behavior immediately;
-- no separate consent persistence;
-- analytics technology appears in the cookie policy inventory automatically;
-- registry duration/provider/purpose matches runtime configuration;
-- consent mode and region/applicability logic remain owned by the legal/cookie module.
-
-## Required tests
-
-- no optional analytics request before permission;
-- no analytics after reject/GPC opt-out in configured strict mode;
-- analytics loads after consent;
-- withdrawal/reset stops future events and disables adapter where supported;
-- no duplicate banner/preference state/store;
-- no hard-coded tracking IDs;
-- event schema validation;
-- CTA/form/tool/legal events use non-sensitive payloads;
-- sensitive-value filters;
-- UTM normalization and allowlist;
-- analytics provider failure does not break the site;
-- cookie registry includes configured analytics technologies;
-- English/Spanish settings integration;
-- keyboard/axe/browser/network tests;
-- type check, lint, unit/integration tests and production build.
+If a target cannot be met, document the exact measurement, cause, attempted fixes and reviewed exception. Never fabricate a score.
 
 ## Git delivery
 
-Push only this branch, update draft PR #12 with browser/network evidence showing consent behavior, registry integration, and payload safety. Stop before performance/Docker/deployment.
+Push only this branch, open/update one draft PR and attach reports/screenshots/artifacts. Stop before Docker/Caddy/deployment.
 
 ## Prohibited
 
-- no second consent system;
-- no marketing/analytics tracker before permission when required;
-- no raw form/privacy/legal payload analytics;
-- no direct Odoo/n8n integration changes;
-- no Docker/Caddy/staging/production changes;
-- no claim that analytics or cookie compliance is live.
+- No feature expansion unrelated to measured remediation.
+- No hiding failures or disabling audits.
+- No production deployment.
