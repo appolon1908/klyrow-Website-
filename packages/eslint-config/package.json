@@ -1,0 +1,13 @@
+{
+  "name": "@klyrow/eslint-config",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "exports": {
+    ".": "./src/index.js"
+  },
+  "dependencies": {
+    "@nuxt/eslint-config": "1.17.0",
+    "@vitest/eslint-plugin": "1.6.27"
+  }
+}

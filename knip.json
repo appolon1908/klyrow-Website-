@@ -1,0 +1,20 @@
+{
+  "workspaces": {
+    "apps/web": {
+      "entry": ["nuxt.config.ts", "app/**/*.vue", "server/**/*.ts"],
+      "project": ["**/*.{ts,vue}"]
+    },
+    "packages/*": { "entry": ["src/index.ts"], "project": ["src/**/*.ts"] }
+  },
+  "ignore": ["apps/web/app/services/public-config.client.ts", "apps/web/tests/builders/index.ts"],
+  "ignoreDependencies": [
+    "@nuxt/eslint-config",
+    "@vitest/eslint-plugin",
+    "@vue/test-utils",
+    "happy-dom",
+    "nuxt",
+    "vitest-environment-nuxt",
+    "vue",
+    "vue-tsc"
+  ]
+}
