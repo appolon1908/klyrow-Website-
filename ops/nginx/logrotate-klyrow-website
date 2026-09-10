@@ -1,0 +1,13 @@
+/var/log/nginx/klyrow-website*.log {
+    daily
+    rotate 14
+    size 25M
+    missingok
+    notifempty
+    compress
+    delaycompress
+    sharedscripts
+    postrotate
+        test ! -f /run/nginx.pid || kill -USR1 "$(cat /run/nginx.pid)"
+    endscript
+}

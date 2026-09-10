@@ -1,24 +1,33 @@
-# Klyrow Website — Docker Runtime and Deployment Contract
+# Klyrow Website — Docker Runtime and Provider-Host Deployment
 
-## 1. Objective
+## Objective
 
-Run the Nuxt 4/Nitro public website as an immutable, non-root Docker workload behind the existing Codestra Caddy edge. This contract covers website runtime only and must not restart or modify unrelated middleware, Odoo, n8n, Postal, Keycloak or database services.
+Run the Nuxt 4/Nitro website as an immutable, non-root Docker workload on the same host as the Klyrow email platform:
 
-## 2. Runtime topology
+```text
+37.27.128.39
+10.40.0.4
+```
 
-Preferred production topology:
+The existing public edge is Nginx with Certbot. Earlier Caddy/`65.109.65.169` instructions are superseded by `CODEX_PROVIDER_HOST_DEPLOYMENT_TASK.md` and `docs/PROVIDER_HOST_NGINX_DEPLOYMENT.md`.
+
+## Topology
 
 ```text
 Internet
-  -> Caddy on 65.109.65.169 :80/:443
-  -> klyrow-website container on loopback or isolated Docker network :3100
-  -> Nuxt same-origin BFF APIs
-  -> authenticated Codestra middleware endpoint
+  -> existing Nginx :80/:443
+  -> klyrow.com / www.klyrow.com
+  -> 127.0.0.1:${KLYROW_WEBSITE_PORT:-18110}
+  -> website container
+  -> Nuxt same-origin BFF
+  -> authenticated Codestra middleware
 ```
 
-The application port must not be publicly exposed.
+Staging prefers `127.0.0.1:18111`. Both ports require a real free-port audit. Port 3100 must not be used by the website.
 
-## 3. Required repository artifacts
+The website must preserve the existing Klyrow gateway, Postal, SMTP, Mautic, Grafana, billing, identity/private gateway, Kyqra and Nginx services.
+
+## Required artifacts
 
 ```text
 Dockerfile
@@ -26,100 +35,46 @@ Dockerfile
 docker-compose.local.yml
 docker-compose.staging.yml
 docker-compose.production.yml
-ops/caddy/klyrow.com.Caddyfile
-ops/systemd/klyrow-website.service or approved compose service wrapper
+.env.example
+ops/nginx/klyrow.com.website.conf.template
+ops/runbooks/provider-host-deploy.md
 scripts/docker-build.sh
 scripts/docker-smoke.sh
 scripts/deploy-staging.sh
 scripts/deploy-production.sh
 scripts/rollback-production.sh
 scripts/verify-release.sh
+scripts/audit-provider-host.sh
+scripts/verify-protected-services.sh
 ```
 
-The implementation may use equivalent paths when clearly documented, but must keep runtime, edge and release concerns separated.
+## Dockerfile
 
-## 4. Dockerfile contract
+Use `deps -> build -> runtime` stages.
 
-Use a multi-stage build:
+Requirements:
 
-```text
-deps -> build -> runtime
+- Node.js 22 active LTS or later supported active LTS;
+- Corepack and pinned pnpm;
+- frozen lockfile install;
+- strict type/build validation;
+- Nitro `.output` only in runtime;
+- no private values at build time;
+- non-root runtime user;
+- graceful signal forwarding;
+- OCI source/revision/version labels;
+- no Git metadata, test reports, compiler cache or development tooling in runtime.
+
+The container may listen internally on port 3000. The host publishes it only to loopback:
+
+```yaml
+ports:
+  - "127.0.0.1:${KLYROW_WEBSITE_PORT:-18110}:3000"
 ```
 
-### Dependencies stage
+## Container hardening
 
-- Node.js 22 active LTS or later supported active LTS.
-- Corepack enabled.
-- pnpm version pinned through `packageManager`.
-- `pnpm install --frozen-lockfile`.
-- Dependency cache may be used only in build stages.
-
-### Build stage
-
-- Copy only required source/config.
-- Run type check, build-time validation and `pnpm build`.
-- Produce Nitro `.output`.
-- Do not inject private runtime secrets at build time.
-- Public build-time values must be explicitly classified.
-
-### Runtime stage
-
-- Copy only Nitro production output and required runtime metadata.
-- Run as a dedicated non-root user.
-- Set `NODE_ENV=production`.
-- Default `NITRO_HOST=0.0.0.0` inside the container and bind externally only through loopback/network policy.
-- Default `NITRO_PORT=3100`.
-- No Git metadata, source maps containing secrets, package manager cache, compiler toolchain or test files.
-- Use `tini` or equivalent init behavior when needed for signal forwarding.
-- Support graceful SIGTERM.
-- Include OCI labels for source repository, revision, build time and version.
-
-## 5. `.dockerignore`
-
-At minimum exclude:
-
-```text
-.git
-.github
-node_modules
-.nuxt
-.output
-coverage
-playwright-report
-test-results
-.env
-.env.*
-!.env.example
-*.log
-.DS_Store
-local secrets
-editor files
-```
-
-Do not accidentally exclude required content data or public assets.
-
-## 6. Container security
-
-Required:
-
-- non-root user;
-- `no-new-privileges`;
-- drop all Linux capabilities unless an evidence-backed exception exists;
-- read-only root filesystem where practical;
-- tmpfs for `/tmp`;
-- no Docker socket;
-- no host network;
-- no privileged mode;
-- no production secret in image history;
-- explicit environment allowlist;
-- request/body limits at Caddy and application layers;
-- resource limits documented and tested;
-- container image scan;
-- dependency audit;
-- SBOM generation;
-- immutable image digest in production.
-
-Suggested compose hardening:
+Production requires:
 
 ```yaml
 read_only: true
@@ -132,44 +87,37 @@ cap_drop:
 restart: unless-stopped
 ```
 
-## 7. Health and readiness
+Also require:
 
-The container healthcheck uses:
+- no privileged mode;
+- no host network;
+- no Docker socket;
+- explicit environment allowlist;
+- resource limits;
+- log rotation;
+- immutable image digest;
+- dependency and image scanning;
+- SBOM and provenance when supported;
+- no secrets in image layers, labels, compose source or logs.
+
+## Health and readiness
 
 ```text
-GET http://127.0.0.1:3100/api/v1/health
-```
-
-Readiness uses:
-
-```text
+GET /api/v1/health
 GET /api/v1/ready
 ```
 
-`health` must not depend on Odoo/n8n. `ready` may expose a safe degraded status for middleware configuration or connectivity but must not leak URLs or credentials.
+`health` proves the process is running. `ready` reports safe dependency state without exposing middleware URLs or credentials. Odoo/n8n outages must not make the process health endpoint fail.
 
-Example safe response:
+## Environment
 
-```json
-{
-  "status": "ready",
-  "version": "git-sha",
-  "dependencies": {
-    "middleware": "configured"
-  }
-}
-```
-
-## 8. Environment configuration
-
-Commit only `.env.example` with placeholders.
-
-Expected variables include:
+Commit placeholders only. Expected settings include:
 
 ```text
 NODE_ENV
 NITRO_HOST
 NITRO_PORT
+KLYROW_WEBSITE_PORT
 PUBLIC_SITE_URL
 PUBLIC_SIGN_IN_URL
 PUBLIC_DOCS_URL
@@ -182,9 +130,8 @@ MIDDLEWARE_API_KEY_FILE
 MIDDLEWARE_CLIENT_CERT_FILE
 MIDDLEWARE_CLIENT_KEY_FILE
 MIDDLEWARE_CA_FILE
-FORM_WEBHOOK_PATH or approved middleware route
 FORM_RATE_LIMIT_BACKEND
-REDIS_URL_FILE when used
+REDIS_URL_FILE
 CAPTCHA_PROVIDER
 CAPTCHA_SITE_KEY
 CAPTCHA_SECRET_FILE
@@ -195,73 +142,40 @@ SCHEDULING_PUBLIC_URL
 RELEASE_SHA
 ```
 
-Private values must be supplied through root-owned files, Docker secrets or an approved secret manager. Do not put private values in compose files, image labels, logs or public runtime config.
+Private values come from root-owned files, Docker secrets or an approved secret manager.
 
-## 9. Local compose
+## Local, staging and production
 
-`docker-compose.local.yml` may expose the app on `127.0.0.1:3100` and use mocked middleware.
+### Local
 
-It must support:
-
-- deterministic startup;
-- healthcheck;
-- hot reload only in local development when explicitly selected;
+- loopback-only binding;
+- mocked middleware by default;
 - no production credentials;
-- repeatable browser tests.
+- deterministic browser tests.
 
-## 10. Staging compose
+### Staging
 
-Staging must:
+- production image;
+- loopback-only port 18111 or approved free alternative;
+- isolated staging secrets;
+- test middleware routes;
+- no real Odoo accounting;
+- restricted/disabled n8n effects;
+- no live email or production billing;
+- separate name, logs and evidence.
 
-- use a production build;
-- use isolated staging secrets;
-- use staging/test middleware routes;
-- prohibit real Odoo accounting and unrestricted n8n workflows;
-- bind to an isolated port/network;
-- support staging Caddy or an authenticated direct check;
-- preserve logs and metrics for acceptance evidence.
+### Production
 
-## 11. Production compose
+- immutable digest;
+- loopback-only port 18110 or approved free alternative;
+- no source mounts;
+- no `latest`;
+- no build in live release directory;
+- healthcheck, restart, limits and log rotation;
+- production secret files;
+- prior release retained.
 
-Production must:
-
-- reference an immutable image digest;
-- bind only to loopback or a private Docker network;
-- have healthcheck and restart policy;
-- use read-only filesystem and tmpfs;
-- specify resource limits or documented host-level controls;
-- use production secret files;
-- define log rotation;
-- never include source mounts;
-- never use `latest`;
-- never build on the live host unless explicitly approved and evidence-backed.
-
-## 12. Image build and publication
-
-CI release workflow:
-
-1. checkout exact reviewed release SHA;
-2. frozen dependency install;
-3. type check, lint, tests and build;
-4. build image;
-5. scan image;
-6. generate SBOM;
-7. generate provenance/attestation when supported;
-8. push immutable tag and digest;
-9. record checksums and image digest in release evidence.
-
-Recommended tags:
-
-```text
-ghcr.io/appolon1908-hue/klyrow-website:<git-sha>
-ghcr.io/appolon1908-hue/klyrow-website:v1.x.y
-```
-
-Production deploys the digest, not a mutable tag.
-
-## 13. Release directories
-
-Use an isolated release structure such as:
+## Release directories
 
 ```text
 /srv/klyrow-website/
@@ -273,131 +187,114 @@ Use an isolated release structure such as:
   evidence/
 ```
 
-Source development occurs in `/srv/codex-workspaces/klyrow-Website-`, not in the live release directory.
+Development stays in:
 
-## 14. Deployment algorithm
+```text
+/srv/codex-workspaces/klyrow-Website-
+```
 
-`deploy-production.sh` must:
+## Image publication
 
-1. verify host identity;
-2. verify exact release SHA and image digest;
-3. verify clean/no-uncommitted source workspace when source is used for metadata only;
-4. confirm required secret files exist without printing them;
-5. confirm DNS for apex and `www` points to the intended host;
-6. confirm ports 80/443 are reachable or appropriately bound;
-7. back up complete Caddy configuration;
-8. capture current container/image/release state;
-9. pull immutable image;
-10. create release metadata;
-11. start candidate on an isolated temporary port/network;
-12. run health, readiness, route, form-mock and static-asset smoke tests;
-13. validate Caddy configuration;
-14. switch Caddy upstream or compose service atomically;
-15. reload Caddy only;
-16. run external HTTPS and redirect checks;
-17. monitor for defined soak period;
-18. mark release current only after checks pass;
-19. preserve previous release for rollback.
+The release workflow must:
 
-Never restart the entire Docker daemon or middleware stack for this website deployment.
+1. check out the exact reviewed SHA;
+2. install from the frozen lockfile;
+3. run type, lint, test and build checks;
+4. build the image;
+5. scan it;
+6. generate SBOM/provenance;
+7. push an immutable SHA tag;
+8. record the digest and checksums.
 
-## 15. Rollback algorithm
+Production deploys the digest.
+
+## Provider-host preflight
+
+The deployment scripts must verify:
+
+- host IP is `37.27.128.39` or `10.40.0.4`;
+- chosen website port is unoccupied;
+- existing Nginx configuration and certificates are captured;
+- existing containers/listeners are inventoried;
+- Klyrow gateway, Postal, SMTP, Mautic, Grafana and Kyqra are healthy;
+- CPU, memory, disk and inode headroom are sufficient;
+- required secret files exist without printing values.
+
+If capacity or port ownership is uncertain, stop.
+
+## Staging deployment
+
+`ops/docker-runtime` may deploy a candidate to the isolated staging loopback port. It must run:
+
+- health/readiness;
+- route and asset smoke;
+- form-mock tests;
+- graceful shutdown/restart;
+- resource-limit behavior;
+- secret/image scans;
+- rollback rehearsal;
+- protected-service health before and after.
+
+This branch may not switch public Nginx traffic.
+
+## Production deployment
+
+Only `release/website-production-v1` may:
+
+1. verify exact release SHA and digest;
+2. capture existing Nginx/container/service evidence;
+3. back up complete Nginx configuration with checksums;
+4. start the candidate on loopback;
+5. pass local and staging-equivalent checks;
+6. validate the complete host-specific Nginx configuration;
+7. prove `app`, `api`, `track`, `bounce` and protected services remain healthy;
+8. install only the reviewed website host split;
+9. gracefully reload Nginx;
+10. run external HTTPS, redirect, route, asset, API-health and durable-form tests;
+11. soak while monitoring both the website and email platform;
+12. mark current only after success;
+13. retain the previous release and Nginx backup.
+
+Never restart the Docker daemon or the complete provider stack for a website release.
+
+## Rollback
+
+Rollback restores the checksum-verified prior Nginx configuration and prior website release, validates Nginx, gracefully reloads it, then verifies apex and every protected Klyrow hostname/service.
 
 Rollback triggers include:
 
 - health/readiness failure;
-- elevated 5xx rate;
-- broken home/pricing/form route;
-- TLS/Caddy failure;
-- middleware form acceptance failure;
-- severe accessibility or rendering regression discovered during activation;
-- resource saturation caused by the candidate.
+- broken home, pricing, localized or form routes;
+- elevated 5xx/latency;
+- middleware durable-acceptance failure;
+- Nginx/TLS failure;
+- regression on app/api/track/bounce;
+- Klyrow, Postal, SMTP, Mautic, Grafana or Kyqra degradation;
+- resource saturation.
 
-`rollback-production.sh` must:
-
-1. identify last known-good digest/release;
-2. restore prior compose/service configuration;
-3. validate Caddy;
-4. switch upstream back;
-5. reload Caddy only;
-6. verify external HTTPS routes and form-safe behavior;
-7. retain failed candidate logs/evidence;
-8. avoid deleting the failed release until investigation completes.
-
-Rollback must be rehearsed in staging.
-
-## 16. Caddy contract
-
-The Caddy site fragment must provide:
-
-```caddyfile
-klyrow.com {
-  encode zstd gzip
-  reverse_proxy <private-or-loopback-upstream> {
-    header_up X-Request-ID {http.request.uuid}
-  }
-}
-
-www.klyrow.com {
-  redir https://klyrow.com{uri} permanent
-}
-```
-
-The actual implementation must add:
-
-- security headers compatible with Nuxt;
-- hashed asset cache policy;
-- no-cache/private policy for API and sensitive responses;
-- request body limits;
-- access log filtering/rotation;
-- trusted proxy policy where applicable;
-- no disclosure of internal upstream addresses in error pages.
-
-Do not blindly copy the example without auditing existing global Caddy options and imported fragments.
-
-## 17. Observability
-
-Expose privacy-safe metrics/logs for:
-
-- request count and latency;
-- status code classes;
-- form accepts/rejects/duplicates;
-- middleware latency/failure;
-- rate limiting;
-- CAPTCHA outcomes without tokens;
-- health/readiness;
-- process memory and event-loop lag where practical;
-- deployment version.
-
-Do not log form message bodies, full phone numbers, CAPTCHA tokens, credentials or authorization headers.
-
-## 18. Acceptance tests
-
-Required before production:
+## Acceptance
 
 ```text
-Docker build = PASS
-container starts as non-root = PASS
-read-only filesystem = PASS or documented reviewed exception
-healthcheck = PASS
-SIGTERM graceful shutdown = PASS
-restart recovery = PASS
-resource limit behavior = PASS
-secret scan = PASS
-image scan = PASS
-SBOM = PRESENT
-staging deploy = PASS
-staging rollback rehearsal = PASS
-Caddy backup = PASS
-Caddy validate = PASS
-apex HTTPS = PASS
-www redirect = PASS
-hashed asset caching = PASS
-HTML/API cache policy = PASS
-form durable acceptance = PASS
-unrelated services unchanged = PASS
+Docker build=PASS
+non-root=PASS
+read-only=PASS_OR_REVIEWED_EXCEPTION
+health/readiness=PASS
+graceful shutdown=PASS
+restart recovery=PASS
+resource limits=PASS
+secret scan=PASS
+image scan=PASS
+SBOM=PRESENT
+staging on provider host=PASS
+staging rollback=PASS
+Nginx backup=PASS
+Nginx validate=PASS
+apex HTTPS=PASS
+www redirect=PASS
+app/api unchanged=PASS
+track/bounce unchanged=PASS
+protected services healthy=PASS
+form durable acceptance=PASS
 ```
 
-## 19. Production restriction
-
-Only `release/website-production-v1` may deploy the public site. `ops/docker-runtime` and `ops/caddy-edge` may build and stage artifacts but must not switch public production traffic.
+`ops/caddy-edge` is superseded for this host. The active edge branch is `ops/provider-host-nginx-edge`.
