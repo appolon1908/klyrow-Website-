@@ -1,9 +1,9 @@
-# Codex Branch Task — SEO, Structured Data and Crawl Validation
+# Codex Branch Task — Consent-Aware Analytics and Attribution
 
 ## Branch
 
 ```text
-feat/seo-structured-data
+feat/analytics-consent
 ```
 
 ## Status
@@ -11,7 +11,7 @@ feat/seo-structured-data
 ```text
 FEATURE_STATUS=SCAFFOLDED
 APPLICATION_CODE_PRESENT=NO
-SEO_VALIDATION=NOT_RUN
+ANALYTICS_ACTIVE=NO
 STAGING_CHANGED=NO
 PRODUCTION_CHANGED=NO
 ```
@@ -21,108 +21,119 @@ PRODUCTION_CHANGED=NO
 Before implementation, recreate/update this branch from accepted:
 
 ```text
-feat/content-localization-pages
 feat/feature-pricing-conversion
+feat/forms-conversion-engine
 feat/legal-privacy-cookie-center
 ```
 
+Read the legal/privacy cookie contract and existing consent implementation before editing.
+
 ## Objective
 
-Make every approved indexable Klyrow marketing and legal route technically sound, discoverable and internally connected without inventing rankings, reviews, prices, compliance status or claims.
+Add optional, environment-configured, privacy-respecting analytics and attribution by consuming the single consent/category gate created by `feat/legal-privacy-cookie-center`.
+
+Do not create a second cookie banner, second preference store, separate consent cookie, or competing category model.
 
 ## Required implementation
 
-- central typed page SEO object;
-- unique localized title and meta description per approved indexable route;
-- canonical URLs;
-- reciprocal English/Spanish hreflang and `x-default`;
-- Open Graph/social metadata;
-- sitemap index and locale sitemaps generated from the marketing route manifest and approved legal registry;
-- robots.txt;
-- real 404 status/page;
-- correct noindex for form success/error, cookie settings, privacy request/status, legal version history, draft/review/retired legal documents and other utilities;
-- conditional legal routes excluded when disabled;
-- Organization and WebSite JSON-LD only where accurate;
-- BreadcrumbList on hierarchical routes;
-- SoftwareApplication/FAQ schema only when visible content supports every property and policy permits it;
-- crawlable internal links and related-content system;
-- Search Console verification through environment configuration;
-- metadata, canonical, hreflang, sitemap, structured-data, redirect and broken-link validators;
-- image alt text based on purpose rather than keyword stuffing.
+- consume the existing legal/cookie consent state and adapter interface;
+- GTM/GA4 adapter loaded only when configured and permitted by category/applicability policy;
+- no tracking identifiers hard-coded in source;
+- approved typed event dictionary;
+- CTA, pricing, form, locale, resource, popup, consent, and interactive-tool events;
+- UTM normalization and attribution handoff to forms/middleware;
+- privacy-safe first-party request/submission correlation where approved;
+- development/test traffic labeling or exclusion;
+- sensitive-value redaction/filtering;
+- consent change, withdrawal, reset, and GPC-driven update behavior;
+- analytics adapter unload/disable behavior where technically supported;
+- optional analytics failure never breaks navigation, forms, legal pages, cookie settings, or tools;
+- category/provider registration in the shared cookie/storage registry.
 
-## Route-count rules
-
-Marketing routes:
+## Approved events
 
 ```text
-46 English
-46 Spanish
+page_view
+cta_click
+pricing_plan_view
+pricing_cta_click
+form_start
+form_validation_error
+form_submit
+form_submit_success
+form_submit_failure
+language_change
+resource_download
+outbound_link
+video_play
+popup_view
+popup_submit
+tool_start
+tool_complete
+tool_failure
+consent_update
+consent_withdraw
+cookie_settings_open
+privacy_request_start
+privacy_request_success
 ```
 
-Legal routes:
+## Payload rules
 
-- count derives from `LegalDocumentDefinition` entries with `status=approved` and `indexable=true`;
-- the planned public legal set has up to 12 routes per locale;
-- draft/review/retired/disabled/utility routes do not count as indexable;
-- English/Spanish approval parity is required for paired published routes unless explicitly approved otherwise.
+Never send:
 
-Do not hard-code a misleading total when legal approvals are still pending. Report:
+- passwords, API keys, tokens, or authorization headers;
+- complete email addresses or phone numbers;
+- free-form support/demo/privacy/security/abuse message bodies;
+- CAPTCHA tokens;
+- full IP addresses;
+- cookie consent IDs unless explicitly approved and purpose-limited;
+- middleware/Odoo/n8n identifiers not approved for analytics;
+- privacy-request public tokens;
+- sensitive customer/product data;
+- legal evidence or document acceptance proof beyond approved document ID/version events.
 
-```text
-MARKETING_INDEXABLE_EN=
-MARKETING_INDEXABLE_ES=
-LEGAL_INDEXABLE_EN=
-LEGAL_INDEXABLE_ES=
-TOTAL_INDEXABLE=
-NOINDEX_UTILITY_COUNT=
-DISABLED_CONDITIONAL_COUNT=
-```
+Prefer anonymous aggregate events. Any pseudonymous identifier requires documented purpose, retention, configuration, and tests.
 
-## Legal indexing rules
+## Consent integration requirements
 
-- only approved effective legal documents may be indexable;
-- draft/review pages display noindex in review environments;
-- retired/historical versions are noindex unless counsel explicitly approves indexing;
-- `/cookie-settings`, `/privacy-request`, `/privacy-request/status/*`, `/do-not-sell-or-share` intake, and `/legal/version-history` are normally noindex;
-- legal pages must not use FAQ schema solely for search enhancement;
-- legal effective/updated dates must match the registry;
-- sitemap generation fails closed on missing canonical, locale pair, version or publication state.
-
-## Content restrictions
-
-- no fake reviews, ratings, prices, customers, awards, certifications or statistics;
-- no hidden text, doorway pages, duplicated thin content or keyword stuffing;
-- no guaranteed ranking, indexing, rich-result or inbox-placement claims;
-- no draft legal text presented as effective/indexable;
-- no indexable success/error/privacy-token routes.
+- necessary-only startup in strict mode;
+- no optional analytics network request before analytics permission;
+- no analytics script inserted merely because the banner rendered;
+- reject and GPC opt-out prevent analytics initialization when applicable;
+- changing preferences updates future event behavior immediately;
+- no separate consent persistence;
+- analytics technology appears in the cookie policy inventory automatically;
+- registry duration/provider/purpose matches runtime configuration;
+- consent mode and region/applicability logic remain owned by the legal/cookie module.
 
 ## Required tests
 
-- exact 46 marketing route count per locale;
-- legal count equals approved/indexable registry entries;
-- every canonical is self-consistent and absolute;
-- every localized published pair has reciprocal hreflang;
-- `x-default` behavior;
-- no duplicate title/description/H1 across materially different routes unless reviewed;
-- sitemap count/status and locale partition;
-- draft/retired/utility exclusion;
-- conditional route exclusion;
-- robots rules;
-- real 404 status;
-- JSON-LD parses and matches visible content;
-- all internal links resolve;
-- no orphan approved indexable page;
-- redirect loop detection;
-- production build/prerender validation.
+- no optional analytics request before permission;
+- no analytics after reject/GPC opt-out in configured strict mode;
+- analytics loads after consent;
+- withdrawal/reset stops future events and disables adapter where supported;
+- no duplicate banner/preference state/store;
+- no hard-coded tracking IDs;
+- event schema validation;
+- CTA/form/tool/legal events use non-sensitive payloads;
+- sensitive-value filters;
+- UTM normalization and allowlist;
+- analytics provider failure does not break the site;
+- cookie registry includes configured analytics technologies;
+- English/Spanish settings integration;
+- keyboard/axe/browser/network tests;
+- type check, lint, unit/integration tests and production build.
 
 ## Git delivery
 
-Push only this branch, update draft PR #11 and post exact route/sitemap/link/metadata/legal-indexing evidence. Stop before analytics/performance/deployment.
+Push only this branch, update draft PR #12 with browser/network evidence showing consent behavior, registry integration, and payload safety. Stop before performance/Docker/deployment.
 
 ## Prohibited
 
-- no analytics loader;
-- no invented SEO/legal proof;
-- no form/API/middleware scope expansion;
-- no Docker/Caddy/staging/production deployment;
-- no claim that Google indexing/ranking is guaranteed or live.
+- no second consent system;
+- no marketing/analytics tracker before permission when required;
+- no raw form/privacy/legal payload analytics;
+- no direct Odoo/n8n integration changes;
+- no Docker/Caddy/staging/production changes;
+- no claim that analytics or cookie compliance is live.
