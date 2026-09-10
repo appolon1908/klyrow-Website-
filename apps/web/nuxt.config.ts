@@ -2,18 +2,24 @@ export default defineNuxtConfig({
   compatibilityDate: '2025-07-15',
   ssr: true,
   devtools: { enabled: false },
-  css: ['~/assets/css/main.css'],
+  css: [
+    '~/assets/css/horizon.css',
+    '~/assets/css/auth.css',
+    '~/assets/css/content.css',
+    '~/assets/css/conversion.css'
+  ],
   app: {
     head: {
-      htmlAttrs: { lang: 'en' },
-      titleTemplate: '%s · Klyrow',
+      charset: 'utf-8',
+      viewport: 'width=device-width, initial-scale=1, viewport-fit=cover',
+      titleTemplate: '%s',
       meta: [
-        { name: 'viewport', content: 'width=device-width, initial-scale=1' },
-        { name: 'theme-color', content: '#5b4df7' },
+        { name: 'application-name', content: 'Klyrow' },
+        { name: 'theme-color', content: '#07090c' },
         { name: 'color-scheme', content: 'light dark' },
-      ],
-      link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
-    },
+        { name: 'format-detection', content: 'telephone=no' }
+      ]
+    }
   },
   runtimeConfig: {
     middlewareCredential: '',
@@ -21,15 +27,24 @@ export default defineNuxtConfig({
     public: {
       releaseSha: 'development',
       publicBaseUrl: 'http://localhost:3000',
-      signInUrl: '',
+      canonicalSiteUrl: 'https://klyrow.com',
+      applicationBaseUrl: 'https://app.klyrow.com',
+      applicationLoginUrl: 'https://app.klyrow.com/auth/login',
+      applicationSignupUrl: 'https://app.klyrow.com/auth/signup',
+      contactUrl: 'https://codestra.co/contact',
       docsUrl: '',
       statusUrl: '',
       schedulingUrl: '',
       pricingMode: 'contact_sales',
       engagementPopupEnabled: false,
-      announcement: '',
-    },
+      announcement: ''
+    }
   },
-  typescript: { strict: true, typeCheck: true },
+  routeRules: {
+    '/account': {
+      headers: { 'x-robots-tag': 'noindex, nofollow, noarchive' }
+    }
+  },
   nitro: { compressPublicAssets: true },
+  typescript: { strict: true, typeCheck: true }
 })

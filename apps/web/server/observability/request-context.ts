@@ -1,7 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto'
 import type { Locale, RequestContext } from '@klyrow/contracts'
 
-export const createRequestId = (inbound?: string) => (inbound?.startsWith('req_') ? inbound.slice(0, 120) : `req_${randomUUID().replaceAll('-', '')}`)
+export const createRequestId = (inbound?: string) => (inbound && /^req_[A-Za-z0-9_-]{1,116}$/.test(inbound) ? inbound : `req_${randomUUID().replaceAll('-', '')}`)
 export const hashClientIp = (ip: string | undefined) => (ip ? createHash('sha256').update(ip).digest('hex').slice(0, 24) : undefined)
 export const createRequestContext = (input: {
   requestId: string

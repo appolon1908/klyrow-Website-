@@ -1,10 +1,11 @@
+import { readBoundedBody } from '../../services/request-body-service'
 import { randomUUID } from 'node:crypto'
 import { ZodError } from 'zod'
 import type { Locale } from '@klyrow/contracts'
 import { ApiProblem, validationProblem } from '../../errors/api-problem'
 import { createRequestContext, createRequestId } from '../../observability/request-context'
-import { apiOperations } from '../../registry/api-operations'
-import { cookiePreferencesSchema, publicSubmissionSchema, toolInputSchema } from '../../schemas/public-submission'
+import { buildPublicOpenApi, matchPublicOperations } from '../../services/openapi-service'
+import { publicSubmissionSchema, toolInputSchema } from '../../schemas/public-submission'
 import { getPublicFeatures, getPublicLegalDocuments, getPublicNavigation, getPublicPricing } from '../../services/public-catalog-service'
 import { submissionService } from '../../services/submission-service'
 import { apiSandboxFixture, domainReadinessFixture, migrationPlanFixture, pricingEstimate, searchPublicContent } from '../../services/tool-service'
@@ -31,6 +32,8 @@ const submissionRoutes: Record<string, { operationId: string; eventType: string 
 const windows = new Map<string, { count: number; resetAt: number }>()
 const checkRate = (key: string, limit = 12) => {
   const now = Date.now()
+  for (const [entry, window] of windows) if (window.resetAt <= now) windows.delete(entry)
+  if (!windows.has(key) && windows.size >= 10000) throw new ApiProblem(429, 'RATE_LIMITED', 'Too many requests. Try again shortly.')
   const current = windows.get(key)
   if (!current || current.resetAt <= now) {
     windows.set(key, { count: 1, resetAt: now + 60000 })
@@ -53,16 +56,22 @@ export default defineEventHandler(async (event) => {
   const locale = parseLocale(getQuery(event).locale)
 
   try {
-    checkRate(`${getRequestIP(event, { xForwardedFor: true }) ?? 'unknown'}:${method}:${path}`)
+    const matching = matchPublicOperations(path)
+    if (!matching.length) throw new ApiProblem(404, 'NOT_FOUND', 'No API operation matches this request.')
+    if (!matching.some((operation) => operation.method === method)) {
+      setHeader(event, 'allow', matching.map((operation) => operation.method).join(', '))
+      throw new ApiProblem(405, 'METHOD_NOT_ALLOWED', 'This method is not supported for this operation.')
+    }
+    checkRate(`${getRequestIP(event) ?? 'unknown'}:${method}:${matching[0]?.operationId}`)
 
     if (method === 'GET' && path === '/api/v1/health') return success(requestId, { status: 'healthy', release_sha: String(config.public.releaseSha) })
-    if (method === 'GET' && path === '/api/v1/ready') return success(requestId, { status: 'ready', dependencies: { middleware: 'mocked' } })
+    if (method === 'GET' && path === '/api/v1/ready') throw new ApiProblem(503, 'MIDDLEWARE_UNAVAILABLE', 'The public catalog is available; durable submission delivery is not configured.')
     if (method === 'GET' && path === '/api/v1/public/config') {
       const csrfToken = `csrf_${randomUUID().replaceAll('-', '')}`
       setCookie(event, 'klyrow_csrf', csrfToken, { httpOnly: false, sameSite: 'strict', secure: process.env.NODE_ENV === 'production', path: '/', maxAge: 3600 })
       return success(requestId, {
         locales: ['en', 'es'],
-        sign_in_url: String(config.public.signInUrl || ''),
+        sign_in_url: String(config.public.applicationLoginUrl || ''),
         docs_url: String(config.public.docsUrl || ''),
         status_url: String(config.public.statusUrl || ''),
         scheduling_url: String(config.public.schedulingUrl || ''),
@@ -77,9 +86,9 @@ export default defineEventHandler(async (event) => {
     if (method === 'GET' && /^\/api\/v1\/public\/legal-documents\/[^/]+$/.test(path)) throw new ApiProblem(404, 'LEGAL_DOCUMENT_NOT_FOUND', 'The legal document is not published.')
     if (method === 'GET' && path === '/api/v1/consent/cookies/config') return success(requestId, { version: 'cookie-policy-v1', categories: ['necessary', 'preferences', 'analytics', 'marketing'], strict_mode: true })
     if (method === 'GET' && path === '/api/v1/consent/cookies/current') return success(requestId, { necessary: true, preferences: false, analytics: false, marketing: false, version: 'cookie-policy-v1' })
-    if (method === 'GET' && /^\/api\/v1\/privacy\/requests\/[^/]+$/.test(path)) return success(requestId, { status: 'received', public_reference: path.split('/').at(-1)?.slice(0, 12) })
+    if (method === 'GET' && /^\/api\/v1\/privacy\/requests\/[^/]+$/.test(path)) throw new ApiProblem(503, 'PRIVACY_STATUS_UNAVAILABLE', 'Verified privacy-request status is not configured.')
     if (method === 'GET' && path === '/api/v1/tools/content-search') return success(requestId, searchPublicContent(String(getQuery(event).q ?? ''), locale))
-    if (method === 'GET' && path === '/api/v1/openapi') return success(requestId, { openapi: '3.1.0', info: { title: 'Klyrow Website BFF', version: String(config.public.releaseSha) }, operations: apiOperations })
+    if (method === 'GET' && path === '/api/v1/openapi') return buildPublicOpenApi(String(config.public.releaseSha))
 
     if (!['POST', 'PUT'].includes(method)) throw new ApiProblem(404, 'NOT_FOUND', 'No API operation matches this request.')
 
@@ -93,7 +102,9 @@ export default defineEventHandler(async (event) => {
     const idempotencyKey = getHeader(event, 'idempotency-key')
     if (!idempotencyKey || idempotencyKey.length < 12 || idempotencyKey.length > 200) throw new ApiProblem(400, 'IDEMPOTENCY_REQUIRED', 'A valid Idempotency-Key header is required.')
 
-    const raw = (await readRawBody(event, 'utf8')) ?? '{}'
+    const contentType = getHeader(event, 'content-type')?.split(';')[0]?.trim().toLowerCase()
+    if (contentType !== 'application/json') throw new ApiProblem(415, 'UNSUPPORTED_MEDIA_TYPE', 'Use application/json for this operation.')
+    const raw = await readBoundedBody(event.node.req)
     if (Buffer.byteLength(raw, 'utf8') > 65536) throw new ApiProblem(413, 'BODY_TOO_LARGE', 'The request body is too large.')
     let rawBody: Record<string, unknown>
     try {
@@ -104,8 +115,7 @@ export default defineEventHandler(async (event) => {
       throw new ApiProblem(400, 'MALFORMED_REQUEST', 'The request body must be valid JSON.')
     }
 
-    if (method === 'PUT' && path === '/api/v1/consent/cookies') return success(requestId, cookiePreferencesSchema.parse(rawBody), 'updated')
-    if (method === 'POST' && path === '/api/v1/consent/cookies/reset') return success(requestId, { necessary: true, preferences: false, analytics: false, marketing: false, version: 'cookie-policy-v1' }, 'reset')
+    if (path === '/api/v1/consent/cookies' || path === '/api/v1/consent/cookies/reset') throw new ApiProblem(503, 'CONSENT_STORAGE_UNAVAILABLE', 'Cookie preference persistence is not configured.')
 
     const toolBody = toolInputSchema.parse(rawBody)
     if (method === 'POST' && path === '/api/v1/tools/pricing-estimate') return success(requestId, pricingEstimate(toolBody, String(config.public.pricingMode || 'contact_sales')))
@@ -119,7 +129,7 @@ export default defineEventHandler(async (event) => {
     if (body.anti_abuse.honeypot) throw new ApiProblem(422, 'SPAM_REJECTED', 'The request could not be accepted.')
     if (Date.now() - Date.parse(body.anti_abuse.started_at) < 1200) throw new ApiProblem(422, 'SUBMISSION_TOO_FAST', 'Please review the form before submitting.')
     if (!body.consent.service_contact) throw new ApiProblem(422, 'CONSENT_REQUIRED', 'Service-contact consent is required for this request.')
-    const context = createRequestContext({ requestId, locale: body.locale, routeId: submissionRoute.operationId, origin, ip: getRequestIP(event, { xForwardedFor: true }), userAgent: getHeader(event, 'user-agent') })
+    const context = createRequestContext({ requestId, locale: body.locale, routeId: submissionRoute.operationId, origin, ip: getRequestIP(event), userAgent: getHeader(event, 'user-agent') })
     const result = await submissionService.submit({ context, operationId: submissionRoute.operationId, eventType: submissionRoute.eventType, idempotencyKey, body, locale: body.locale })
     setResponseStatus(event, 202)
     return { request_id: requestId, ...result }

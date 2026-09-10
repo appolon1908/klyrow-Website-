@@ -1,0 +1,34 @@
+/* Public application-handoff styles. All colors resolve through Horizon tokens. */
+.hz-auth-notice {
+  border-bottom: 1px solid var(--hz-border);
+  background: var(--hz-bg-subtle);
+}
+
+.hz-auth-notice__inner {
+  min-height: 4rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 0.75rem;
+}
+
+.hz-auth-notice p {
+  color: var(--hz-text-muted);
+}
+
+.hz-mono-value {
+  overflow-wrap: anywhere;
+  color: var(--hz-text-muted);
+  font-family: var(--hz-font-mono);
+  font-size: 0.875rem !important;
+  font-weight: 500;
+  letter-spacing: 0;
+}
+
+@media (max-width: 42rem) {
+  .hz-auth-notice__inner {
+    align-items: stretch;
+    flex-direction: column;
+  }
+}

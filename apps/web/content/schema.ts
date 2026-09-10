@@ -1,5 +1,7 @@
 import type { Locale } from '@klyrow/contracts'
 
+// Public marketing content only. This catalog must never model account,
+// session, tenant-authority, billing-ledger, or provider-delivery state.
 export type MarketingPageKind =
   | 'home'
   | 'company'
@@ -23,6 +25,6 @@ export interface MarketingPageContent {
   steps: [string, string, string]
   related: string[]
   primaryCta: { label: string; target: string }
-  secondaryCta?: { label: string; target: string }
-  formId?: string
+  secondaryCta?: { label: string; target: string } | undefined
+  formId?: string | undefined
 }

@@ -1,0 +1,63 @@
+{
+  "schemaVersion": "1.0",
+  "repository": "appolon1908-hue/klyrow-Website-",
+  "visualContract": {
+    "repository": "appolon1908-hue/SDK-repository",
+    "commit": "7db4c6549a0a007922355090f03c082a308f3855"
+  },
+  "suiteDiscovery": [
+    {
+      "root": "apps",
+      "packageFile": "package.json",
+      "exclude": []
+    }
+  ],
+  "suites": [
+    {
+      "id": "klyrow-web",
+      "root": "apps/web",
+      "surface": "public",
+      "theme": "klyrow",
+      "canonicalOrigin": "https://klyrow.com",
+      "domains": {
+        "public": ["https://klyrow.com", "https://www.klyrow.com"],
+        "application": ["https://app.klyrow.com"],
+        "identity": ["https://auth.codestra.co"],
+        "corporate": ["https://codestra.co"]
+      },
+      "shell": {
+        "mode": "public",
+        "rootFile": "apps/web/app/app.vue",
+        "headerFile": "apps/web/app/components/AppHeader.vue",
+        "footerFile": "apps/web/app/components/AppFooter.vue",
+        "tokensFile": "apps/web/app/assets/css/horizon.css",
+        "requiredRootMarkers": [
+          "data-horizon-root",
+          "'data-horizon-theme': 'klyrow'",
+          "'data-horizon-appearance': 'dark'"
+        ],
+        "pageRoots": ["apps/web/app/pages"]
+      },
+      "auth": {
+        "mode": "public-only",
+        "protectedRoutes": false,
+        "browserTokenStorage": "forbidden",
+        "applicationAuthority": "appolon1908-hue/klyrow.com",
+        "applicationOrigin": "https://app.klyrow.com"
+      },
+      "colorPolicy": {
+        "rejectNewRawColors": true,
+        "allowedColorFiles": [
+          "apps/web/app/assets/css/horizon.css",
+          "apps/web/app/assets/css/auth.css",
+          "apps/web/nuxt.config.ts"
+        ]
+      },
+      "newPagePolicy": {
+        "inheritsRootShell": true,
+        "usesHorizonTokens": true,
+        "requiresStateMatrix": true
+      }
+    }
+  ]
+}

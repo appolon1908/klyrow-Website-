@@ -1,0 +1,9 @@
+[extend]
+useDefault = true
+
+[[allowlists]]
+description = "Documentation-only prohibition against committing credentials; not a secret value"
+condition = "AND"
+paths = ['''^docs/BRANCH_AND_DELIVERY_PLAN\.md$''']
+regexTarget = "line"
+regexes = ['''^- no `\.env`, credentials, analytics secrets, Odoo/middleware/n8n keys, or TLS private keys;$''']

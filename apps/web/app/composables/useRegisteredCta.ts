@@ -1,26 +1,40 @@
-import { ctaRegistry, formRouteMap, type CtaId } from '../data/cta-registry'
+import { useContentLocale } from './useContentLocale'
+import {
+  resolveRegisteredCta,
+  type CtaId,
+  type CtaRuntimeValues
+} from '../data/cta-registry'
 
 export const useRegisteredCta = (id: CtaId) => {
   const config = useRuntimeConfig()
-  const { locale, localizePath } = useLocale()
-  const registered = ctaRegistry[id]
-  const runtimeValue = (target: string) => {
-    if (target === 'runtime:signInUrl') return String(config.public.signInUrl || '')
-    if (target === 'runtime:docsUrl') return String(config.public.docsUrl || '')
-    if (target === 'runtime:statusUrl') return String(config.public.statusUrl || '')
-    return target
-  }
-  const href = computed(() => {
-    const definition = registered.definition
-    if (definition.kind === 'route') return localizePath(definition.target)
-    if (definition.kind === 'form') return `${localizePath(formRouteMap[definition.target] ?? '/contact')}?form=${encodeURIComponent(definition.target)}`
-    const resolved = runtimeValue(definition.target)
-    return resolved || localizePath(registered.fallbackRoute ?? '/')
+  const route = useRoute()
+  const { locale } = useContentLocale()
+
+  const runtime = computed<CtaRuntimeValues>(() => {
+    const values = config.public as Record<string, unknown>
+    return {
+      applicationLoginUrl: String(values.applicationLoginUrl ?? ''),
+      applicationSignupUrl: String(values.applicationSignupUrl ?? ''),
+      contactUrl: String(values.contactUrl ?? ''),
+      docsUrl: String(values.docsUrl ?? ''),
+      schedulingUrl: String(values.schedulingUrl ?? ''),
+      statusUrl: String(values.statusUrl ?? '')
+    }
   })
+
+  const resolved = computed(() =>
+    resolveRegisteredCta(id, {
+      currentPath: route.path,
+      locale: locale.value,
+      runtime: runtime.value
+    })
+  )
+
   return {
-    definition: registered.definition,
-    label: computed(() => registered.labels[locale.value]),
-    href,
-    external: computed(() => ['external', 'auth', 'download'].includes(registered.definition.kind) && href.value.startsWith('http')),
+    disabled: computed(() => resolved.value.disabled),
+    external: computed(() => resolved.value.external),
+    href: computed(() => resolved.value.href),
+    label: computed(() => resolved.value.label),
+    variant: computed(() => resolved.value.variant)
   }
 }
