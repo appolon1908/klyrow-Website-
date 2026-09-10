@@ -1,135 +1,139 @@
-# Klyrow Website — Provider Host Deployment
+# Klyrow Website — Provider-Host Nginx Deployment Contract
 
-## Binding decision
+## Authority
 
-The public website will run on the same host as the Klyrow email platform:
+This is the authoritative public-edge source contract for the Klyrow Website.
 
-```text
-Public host: 37.27.128.39
-Private host: 10.40.0.4
-Edge: existing Nginx and Certbot
-```
+It supersedes the historical Caddy plan, the `65.109.65.169` target, and the public port-`3100` topology. `docs/CADDY_PRODUCTION_DEPLOYMENT.md` is non-authoritative historical material and must not be executed.
 
-This document overrides earlier website instructions that targeted `65.109.65.169` or required Caddy.
-
-Do not install Caddy on this host. Nginx already owns public ports 80 and 443.
-
-## Protected existing services
-
-Codex must audit the host before changes and preserve all existing services. Known assigned listeners include:
+## Target topology
 
 ```text
-Klyrow gateway      18000
-Mautic              18001
-Postal web          18002
-Grafana/operations  18003
-Klyrow billing      18080
-Keycloak/internal   18082
-private gateway     18443
-Kyqra crawler       3100
-SMTP and messaging  existing assigned ports
+Provider host: 37.27.128.39
+Private network context: 10.40.0.4
+Existing edge: Nginx + Certbot
+Website production candidate: reviewed loopback port, preferred 127.0.0.1:18110
+Website staging candidate: reviewed loopback port, preferred 127.0.0.1:18111
 ```
 
-The website must not reuse or remap these ports.
-
-## Website runtime
-
-Preferred loopback bindings, only after proving they are unused:
+Preferred public result after a separately approved cutover:
 
 ```text
-production  127.0.0.1:18110
-staging     127.0.0.1:18111
+klyrow.com / www.klyrow.com -> Klyrow public website
+app.klyrow.com               -> existing authenticated Klyrow application
+api.klyrow.com               -> existing Klyrow API
+track / bounce               -> existing audited delivery behavior
 ```
 
-If either port is occupied, Codex must stop and record an approved alternative. The website container must never publish its application port publicly.
+No port or hostname is reserved merely because it appears in this document. A read-only host audit must verify listeners, server blocks, certificates, filesystem paths, container names, and protected services before any candidate configuration is prepared.
 
-## Required host routing
+## Non-negotiable protections
 
-Nginx must be split by hostname:
+The website change must preserve:
 
-```text
-klyrow.com
-www.klyrow.com       -> Klyrow Website
+- existing Nginx and Certbot ownership;
+- `app.klyrow.com` and `api.klyrow.com`;
+- tracking and bounce routes;
+- Postal web/SMTP and Mautic services;
+- billing, identity/private gateway, Kyqra, Grafana, and monitoring;
+- unrelated virtual hosts;
+- firewall and private-network policy;
+- the public website's public-only authentication boundary.
 
-app.klyrow.com
-api.klyrow.com       -> preserve existing Klyrow gateway behavior
+Do not install Caddy, perform a full-stack restart, bind the website container directly to a public interface, or modify an unrelated server block.
 
-track.klyrow.com
-bounce.klyrow.com    -> preserve existing delivery behavior
-```
+## Read-only discovery
 
-Any existing Mautic, Postal, Grafana, webhook or operational routes must be preserved and scoped to the correct hostname. Administrative routes must not become public website routes.
+Before an apply candidate exists, collect and review:
 
-## Repository ownership
+- host identity and hashed machine identifier;
+- `ss`/listener inventory;
+- Nginx version, prefix, included files, and active `nginx -T` output;
+- Certbot certificate inventory and expiry;
+- container/service inventory without exposing secret values;
+- current health of app/API/track/bounce and protected services;
+- available loopback ports;
+- filesystem ownership/mode for candidate and backup paths;
+- current public DNS and HTTPS behavior.
 
-`appolon1908-hue/klyrow-Website-` owns the website source, BFF, Docker runtime, website release scripts and an Nginx fragment template.
+Discovery must not run as unrestricted root, print credentials, restart services, or alter the host.
 
-`appolon1908-hue/klyrow.com` owns the existing Klyrow service topology and current Nginx configuration. A production edge edit must have reviewed source and rollback evidence; no untracked live edit is allowed.
+## Candidate preparation
 
-## Deployment requirements
+1. Build the website once from an exact protected-main SHA.
+2. Record the immutable digest, source labels, SBOM, provenance, vulnerability scan, configuration checksum, and previous digest.
+3. Deploy that exact digest to staging-readonly on a verified loopback port.
+4. Certify health, readiness, exact version readback, public routes, localized routes, account handoff, headers, accessibility, monitoring, and zero live effects.
+5. Archive the complete current Nginx configuration and write its SHA-256 checksum off the live path.
+6. Generate an isolated candidate server block that changes only the apex and `www` website routes.
+7. Build a complete candidate Nginx prefix containing every required include and certificate reference.
+8. Run `nginx -t` against that candidate prefix.
+9. Compare protected server blocks and routes before requesting production approval.
 
-Before any switch, Codex must record:
+No candidate may rely on guessed paths, mutable images, an arbitrary manifest input, or an unreviewed branch/tag.
 
-- host identity and occupied listeners;
-- running system and Docker services;
-- Nginx full configuration and validation result;
-- certificate inventory without private keys;
-- current behavior of apex, `www`, `app`, `api`, `track` and `bounce`;
-- local health of the Klyrow gateway, Postal, Mautic, Grafana and Kyqra;
-- CPU, memory, disk and inode headroom.
+## Edge behavior
 
-The website container must be immutable, non-root, read-only where practical, capability-free, loopback-bound, healthchecked, resource-limited and deployed by digest.
+The apex server must:
 
-## Nginx rules
+- terminate TLS with the reviewed existing certificate path;
+- redirect `www.klyrow.com` to the canonical apex, or follow the separately approved canonical-host policy;
+- proxy only to the immutable website workload on loopback;
+- set forwarding headers deliberately;
+- enforce bounded body/request timeouts;
+- apply website security headers without weakening application/API routes;
+- cache hashed static assets safely;
+- use `no-store` for dynamic API/problem responses where applicable;
+- preserve real client/request correlation without exposing internal topology;
+- have dedicated access/error logs with bounded rotation.
 
-The website Nginx block must provide:
+The website server block must not capture `app`, `api`, `track`, `bounce`, or wildcard subdomains.
 
-- apex HTTPS;
-- permanent `www` to apex redirect;
-- reverse proxy to the loopback website port;
-- request ID propagation;
-- bounded timeouts and request-body limits;
-- compression supported by the installed Nginx;
-- immutable cache for hashed Nuxt assets;
-- no-cache/private handling for HTML and sensitive APIs;
-- tested security headers;
-- privacy-safe rotated logs;
-- no internal-upstream disclosure.
+## Apply boundary
 
-Codex must validate the complete Nginx configuration before a graceful Nginx-only reload. It must not restart Docker, Postal, Klyrow, Mautic, SMTP, Keycloak or the provider stack.
+Production apply requires:
 
-## Deployment sequence
+- unchanged exact source SHA and image digest;
+- green source and staging evidence;
+- successful backup and rollback rehearsal;
+- protected production environment approval;
+- verified DNS/TLS authority;
+- healthy monitoring;
+- an explicit change record and stop conditions.
 
-1. Verify host and free website port.
-2. Capture existing service, Nginx, certificate and resource evidence.
-3. Back up the complete Nginx configuration with checksums.
-4. Verify exact website release SHA and immutable image digest.
-5. Start the candidate on an isolated loopback port.
-6. Run health, readiness, route, asset and form-safe smoke tests.
-7. Validate the complete candidate Nginx configuration.
-8. Recheck all protected existing services and hostnames.
-9. Install only the reviewed website host split.
-10. Gracefully reload Nginx.
-11. Run external apex, `www`, TLS, API-health and form tests.
-12. Monitor website and existing Klyrow services during soak.
-13. Mark current only after all checks pass.
-14. Preserve the prior website release and prior Nginx configuration.
+Apply only the reviewed candidate through a narrowly scoped operator. The operator may validate, atomically install the approved website server block, and perform an Nginx-only reload. It must not expose a shell, Docker wildcard, broad filesystem access, or `NOPASSWD: ALL`.
 
-## Rollback
+## Post-apply checks
 
-Rollback restores the checksum-verified previous Nginx configuration and prior website release, validates Nginx, gracefully reloads it, and verifies every protected Klyrow hostname and service. The whole Docker daemon or provider stack must never be restarted for a website rollback.
+Immediately verify:
 
-## Stop conditions
+- apex HTTPS and canonical redirect;
+- public and localized routes;
+- assets and cache headers;
+- security headers;
+- application handoff to `app.klyrow.com`;
+- app/API/track/bounce and protected-service health;
+- website logs and monitoring;
+- zero unexpected write or provider effects.
 
-Stop or roll back on:
+Continue a bounded soak with explicit latency/error and protected-service thresholds.
 
-- occupied website port;
-- failed Nginx validation;
-- broken TLS or apex/`www` behavior;
-- regression on `app`, `api`, `track` or `bounce`;
-- unhealthy Klyrow gateway, Postal, SMTP, Mautic, Grafana or Kyqra;
-- website health/readiness or durable form failure;
-- resource saturation;
-- missing artifact, secret-file, DNS, certificate, review or rollback evidence.
+## Automatic rollback
 
-Only `release/website-production-v1` may switch public apex traffic. `ops/provider-host-nginx-edge` may prepare and rehearse the host split but may not activate production. `ops/caddy-edge` is superseded for this host.
+Restore the exact checksummed Nginx backup and previous immutable website digest on any:
+
+- Nginx syntax/reload failure;
+- source/digest/version mismatch;
+- HTTPS/certificate/hostname failure;
+- apex route or asset failure;
+- app/API/track/bounce regression;
+- protected-service degradation;
+- monitoring loss;
+- security-header or authentication-boundary regression;
+- unexpected external effect.
+
+After rollback, re-run Nginx validation, public checks, protected-service checks, and exact version readback. Record RTO and configuration integrity.
+
+## Safety
+
+This document is source guidance only. It performs no host discovery, container start, Nginx edit/reload, DNS change, certificate action, provider activation, email delivery, database mutation, or production traffic shift.

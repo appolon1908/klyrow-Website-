@@ -1,74 +1,67 @@
 # Klyrow Website
 
-Production public website for Klyrow, the governed customer-communications platform built with Nuxt 4/Vue 3 and integrated through Codestra middleware with Odoo and non-authoritative n8n automation.
+## Repository authority
 
-## Current status
+This repository is the **public Klyrow marketing website frontend authority**.
+
+`appolon1908-hue/klyrow.com` is the separate **authenticated Klyrow application, email, and runtime authority**. It owns browser-session security, tenant/application state, Postal/Mautic integration, delivery events, suppressions, domain onboarding, billing foundations, provider credentials, and runtime operations.
+
+The public website must not create a second identity client, browser token store, Postal/Mautic backend, email queue, delivery ledger, tenant database, or provider credential store. Public forms and tools may cross a reviewed server-side Kong/Middleware boundary; browsers must never write directly to Odoo, n8n, Postal, Mautic, or provider databases.
 
 ```text
-PLANNING=COMPLETE_V2
-APPLICATION_IMPLEMENTED=NO
-DOCKER_RUNTIME_IMPLEMENTED=NO
-PRODUCTION_DEPLOYED=NO
+Public browser -> klyrow-Website- server adapter -> Kong/Middleware -> governed services
+Account browser -> app.klyrow.com -> klyrow.com application authority
 ```
 
-The repository intentionally separates heavy features into focused branches and draft PRs. Empty branch/task scaffolds are not completed application code.
+## Current source status
+
+```text
+HORIZON_PUBLIC_SHELL=PROTECTED_ON_MAIN
+PUBLIC_ONLY_AUTH_BOUNDARY=ENFORCED
+BROWSER_TOKEN_STORAGE=PROHIBITED
+IMMUTABLE_DEPLOY_READINESS_SOURCE_GATE=AVAILABLE
+LOCALIZED_CONTENT_RECONCILIATION=IN_PROGRESS
+STAGING_DEPLOYMENT=NOT_CERTIFIED
+PRODUCTION_DEPLOYMENT=NOT_ACTIVE
+PUBLIC_EDGE_CUTOVER=NOT_AUTHORIZED
+```
+
+The current `main` provides the Nuxt 4/Vue 3 workspace, Horizon public shell, shared header/footer, semantic tokens, application handoff, source tests, and deploy-readiness governance. It is a source authority—not evidence that an immutable image has been deployed or that public DNS now serves this build.
+
+## Edge authority
+
+The current provider-host direction is the **existing Nginx + Certbot edge**, with the website isolated on a reviewed loopback port. Do not install Caddy or execute the historical `docs/CADDY_PRODUCTION_DEPLOYMENT.md` plan.
+
+The current source contract is `docs/PROVIDER_HOST_NGINX_DEPLOYMENT.md`. The Caddy document is retained only as historical reference until removed in a focused cleanup; it is non-authoritative and must not be executed.
 
 ## Authoritative documents
 
-- `CODEX_WEBSITE_PRODUCTION_TASK.md`
-- `CODEX_WEBSITE_HARDENING_AND_DOCKER_TASK.md`
+- `REPOSITORY_PROFILE.md`
+- `HORIZON-ADOPTION.md`
+- `OWNER_WEBSITE_PRODUCTION_DIRECTIVE.md`
+- `docs/PROVIDER_HOST_NGINX_DEPLOYMENT.md`
+- `docs/DOCKER_RUNTIME_AND_DEPLOYMENT.md`
+- `docs/IMPLEMENTATION_STATUS_AND_RELEASE_TRUTH.md`
+- `docs/REPOSITORY_ARCHITECTURE_AND_API_CATALOG.md`
 - `docs/BRANCH_AND_DELIVERY_PLAN.md`
 - `docs/API_FORM_CTA_CONTRACT.md`
-- `docs/ENHANCED_FEATURES_AND_BRANCHES.md`
-- `docs/DOCKER_RUNTIME_AND_DEPLOYMENT.md`
+- `docs/LEGAL_PRIVACY_COOKIE_COMPLIANCE.md`
 - `docs/SITEMAP_CONTENT_AND_DESIGN.md`
 - `docs/FORMS_MIDDLEWARE_ODOO_N8N.md`
 - `docs/SEO_PERFORMANCE_AND_TRACKING.md`
-- `docs/CADDY_PRODUCTION_DEPLOYMENT.md`
 
-## Clean implementation order
+Historical task prompts and Caddy plans do not override the current profile, Horizon boundary, Nginx edge contract, protected-main source, or exact-head release evidence.
 
-```text
-feat/site-shell-design-system
-feat/content-localization-pages
-feat/feature-pricing-conversion
-feat/public-api-bff
-feat/forms-conversion-engine
-feat/middleware-odoo-n8n
-feat/interactive-tools
-feat/seo-structured-data
-feat/analytics-consent
-perf/core-web-vitals-accessibility
-ops/docker-runtime
-ops/caddy-edge
-release/website-production-v1
-```
+## Release boundary
 
-Start with draft PR #4 and stop after each branch for review.
+Do not deploy an arbitrary feature branch or mutable image. Production activation requires one exact protected-main SHA and immutable digest, staging-readonly certification, DNS/TLS and Nginx validation, protected-service checks, backups, rollback rehearsal, accessibility, performance, security, and an explicit production change approval.
 
-## Codex launcher
-
-Run on the Codestra middleware/Caddy server:
-
-```bash
-ssh root@65.109.65.169
-
-tmux new-session -A -s klyrow-website-v2
-
-set -Eeuo pipefail
-launcher="$(mktemp /tmp/klyrow-website-v2.XXXXXX)"
-curl -fsSL \
-  "https://raw.githubusercontent.com/appolon1908-hue/klyrow-Website-/aaeeb1e80bbaf72420d4bf4acfd8e83345a794da/scripts/start-codex-website-v2.sh" \
-  -o "$launcher"
-bash "$launcher"
-```
-
-This launcher starts only `feat/site-shell-design-system`. Public production deployment is permitted only from `release/website-production-v1` after every gate passes.
+A pull-request merge performs no deployment and enables no live email effect.
 
 ## Safety boundaries
 
-- Browser never calls Odoo or n8n directly.
-- No direct Odoo database writes.
+- Browsers never call Odoo, n8n, Postal, or Mautic directly.
+- No access, refresh, or ID token is stored by the public website.
+- No direct Odoo database write or provider administration.
 - No secrets in Git or public runtime configuration.
-- No live email-delivery, Postal, real billing or unrelated service changes.
-- No feature/ops branch deploys public production.
+- No live email delivery, Postal change, real billing, DNS mutation, Nginx reload, or unrelated service change from an ordinary source merge.
