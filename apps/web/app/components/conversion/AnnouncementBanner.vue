@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useContentLocale } from '../../composables/useContentLocale'
 const config = useRuntimeConfig()
 const { locale } = useContentLocale()
 const dismissed = ref(false)

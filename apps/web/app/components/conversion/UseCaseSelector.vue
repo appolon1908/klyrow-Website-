@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useContentLocale } from '../../composables/useContentLocale'
 import { useCases } from '../../data/pricing'
 
 const { locale, localizePath } = useContentLocale()

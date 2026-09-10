@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useContentLocale } from '../../composables/useContentLocale'
 import type { CtaId } from '../../data/cta-registry'
 
 withDefaults(

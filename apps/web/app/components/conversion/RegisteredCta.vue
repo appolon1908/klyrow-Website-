@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useRegisteredCta } from '../../composables/useRegisteredCta'
 import type { CtaId } from '../../data/cta-registry'
 
 const props = defineProps<{

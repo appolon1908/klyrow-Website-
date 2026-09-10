@@ -1,3 +1,4 @@
+import { useContentLocale } from './useContentLocale'
 import {
   resolveRegisteredCta,
   type CtaId,

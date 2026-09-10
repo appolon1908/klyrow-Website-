@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { useContentLocale } from '../../composables/useContentLocale'
 import { englishContentPathFromRoute } from '../../../content'
 
 const config = useRuntimeConfig()
