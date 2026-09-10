@@ -1,0 +1,2 @@
+<template><ClientOnly><LazyPricingEstimatorTool v-if="basePath === '/pricing'" /><LazyDomainReadinessTool v-else-if="basePath === '/features/domains'" /><LazyApiSandboxTool v-else-if="basePath === '/developers/api'" /><template v-else-if="basePath === '/resources/guides'"><LazyMigrationPlannerTool /><LazyContentSearchTool /></template><LazySchedulingHandoff v-else-if="basePath === '/contact' || basePath === '/demo'" /></ClientOnly></template>
+<script setup lang="ts">const route=useRoute();const basePath=computed(()=>route.path.replace(/^\/es(?=\/|$)/,'')||'/')</script>
